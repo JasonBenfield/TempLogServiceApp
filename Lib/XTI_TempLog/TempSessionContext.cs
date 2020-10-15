@@ -37,11 +37,15 @@ namespace XTI_TempLog
             return log.Write($"session.{session.SessionKey}.log", serialized);
         }
 
+        private string requestKey;
+
+
         public Task StartRequest(string path)
         {
+            requestKey = Guid.NewGuid().ToString("N");
             var request = new StartRequestModel
             {
-                RequestKey = Guid.NewGuid().ToString("N"),
+                RequestKey = requestKey,
                 SessionKey = currentSession.SessionKey,
                 VersionKey = appEnvironmentContext.Value().VersionKey,
                 Path = path,
@@ -50,5 +54,22 @@ namespace XTI_TempLog
             var serialized = JsonSerializer.Serialize(request);
             return log.Write($"request.{request.RequestKey}.log", serialized);
         }
+
+        public Task LogException(AppEventSeverity severity, Exception ex, string caption)
+        {
+            var tempEvent = new LogEventModel
+            {
+                EventKey = Guid.NewGuid().ToString("N"),
+                RequestKey = requestKey,
+                TimeOccurred = clock.Now(),
+                Severity = severity.Value,
+                Caption = caption,
+                Message = ex.Message,
+                Detail = ex.StackTrace
+            };
+            var serialized = JsonSerializer.Serialize(tempEvent);
+            return log.Write($"event.{tempEvent.EventKey}.log", serialized);
+        }
+
     }
 }
