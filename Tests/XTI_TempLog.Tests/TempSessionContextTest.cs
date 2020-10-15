@@ -19,7 +19,8 @@ namespace XTI_TempLog.Tests
         {
             var input = setup();
             await input.TempSessionContext.StartSession();
-            var files = input.TempLog.Files();
+            var files = input.
+                TempLog.Files();
             Assert.That(files.Length, Is.EqualTo(1));
         }
 
@@ -31,7 +32,7 @@ namespace XTI_TempLog.Tests
             var files = input.TempLog.StartSessionFiles().ToArray();
             var serializedSession = await files[0].Read();
             var tempSession = JsonSerializer.Deserialize<StartSessionModel>(serializedSession);
-            Assert.That(tempSession.SessionKey, Is.Not.EqualTo(""), "Should create session key");
+            Assert.That(string.IsNullOrWhiteSpace(tempSession.SessionKey), Is.False, "Should create session key");
             Assert.That(tempSession.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should set current session key");
             Assert.That(tempSession.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
             Assert.That(tempSession.UserName, Is.EqualTo(input.AppEnvironmentContext.Environment.UserName), "Should set user name from environment");
@@ -54,8 +55,45 @@ namespace XTI_TempLog.Tests
             Assert.That(tempRequest.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should create session key");
             Assert.That(tempRequest.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
             Assert.That(tempRequest.Path, Is.EqualTo(path), "Should set path");
-            Assert.That(tempRequest.RequestKey, Is.Not.EqualTo(""), "Should set request key");
+            Assert.That(string.IsNullOrWhiteSpace(tempRequest.RequestKey), Is.False, "Should set request key");
             Assert.That(tempRequest.VersionKey, Is.EqualTo(input.AppEnvironmentContext.Environment.VersionKey), "Should set version key from environment");
+        }
+
+        [Test]
+        public async Task ShouldLogError()
+        {
+            var input = setup();
+            await input.TempSessionContext.StartSession();
+            var path = "group1/action1";
+            await input.TempSessionContext.StartRequest(path);
+            Exception thrownException;
+            try
+            {
+                throw new Exception("Test");
+            }
+            catch (Exception ex)
+            {
+                await input.TempSessionContext.LogException
+                (
+                    AppEventSeverity.Values.CriticalError,
+                    ex,
+                    "An unexpected error occurred"
+                );
+                thrownException = ex;
+            }
+            var requestFiles = input.TempLog.StartRequestFiles().ToArray();
+            var request = JsonSerializer.Deserialize<StartRequestModel>(await requestFiles[0].Read());
+            var eventFiles = input.TempLog.LogEventFiles().ToArray();
+            Assert.That(eventFiles.Length, Is.EqualTo(1));
+            var serializedSession = await eventFiles[0].Read();
+            var tempEvent = JsonSerializer.Deserialize<LogEventModel>(serializedSession);
+            Assert.That(string.IsNullOrWhiteSpace(tempEvent.EventKey), Is.False, "Should create event key");
+            Assert.That(tempEvent.RequestKey, Is.EqualTo(request.RequestKey), "Should set request key");
+            Assert.That(tempEvent.Severity, Is.EqualTo(AppEventSeverity.Values.CriticalError.Value), "Should set severity");
+            Assert.That(tempEvent.Caption, Is.EqualTo("An unexpected error occurred"), "Should set caption");
+            Assert.That(tempEvent.Message, Is.EqualTo(thrownException.Message), "Should set message");
+            Assert.That(tempEvent.Detail, Is.EqualTo(thrownException.StackTrace), "Should set detail");
+            Assert.That(tempEvent.TimeOccurred, Is.EqualTo(input.Clock.Now()), "Should set time occurred to the current time");
         }
 
         private TestInput setup()
