@@ -32,11 +32,30 @@ namespace XTI_TempLog.Tests
             var serializedSession = await files[0].Read();
             var tempSession = JsonSerializer.Deserialize<StartSessionModel>(serializedSession);
             Assert.That(tempSession.SessionKey, Is.Not.EqualTo(""), "Should create session key");
+            Assert.That(tempSession.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should set current session key");
             Assert.That(tempSession.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
             Assert.That(tempSession.UserName, Is.EqualTo(input.AppEnvironmentContext.Environment.UserName), "Should set user name from environment");
             Assert.That(tempSession.RequesterKey, Is.EqualTo(input.AppEnvironmentContext.Environment.RequesterKey), "Should set requester key from environment");
             Assert.That(tempSession.UserAgent, Is.EqualTo(input.AppEnvironmentContext.Environment.UserAgent), "Should set user agent from environment");
             Assert.That(tempSession.RemoteAddress, Is.EqualTo(input.AppEnvironmentContext.Environment.RemoteAddress), "Should set remote address from environment");
+        }
+
+        [Test]
+        public async Task ShouldWriteRequestToLog_WhenStartingARequest()
+        {
+            var input = setup();
+            await input.TempSessionContext.StartSession();
+            var path = "group1/action1";
+            await input.TempSessionContext.StartRequest(path);
+            var files = input.TempLog.StartRequestFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1));
+            var serializedSession = await files[0].Read();
+            var tempRequest = JsonSerializer.Deserialize<StartRequestModel>(serializedSession);
+            Assert.That(tempRequest.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should create session key");
+            Assert.That(tempRequest.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
+            Assert.That(tempRequest.Path, Is.EqualTo(path), "Should set path");
+            Assert.That(tempRequest.RequestKey, Is.Not.EqualTo(""), "Should set request key");
+            Assert.That(tempRequest.VersionKey, Is.EqualTo(input.AppEnvironmentContext.Environment.VersionKey), "Should set version key from environment");
         }
 
         private TestInput setup()
@@ -47,8 +66,12 @@ namespace XTI_TempLog.Tests
             services.AddScoped<Clock, FakeClock>();
             services.AddScoped<IAppEnvironmentContext>(sp => new FakeAppEnvironmentContext
             {
-                Environment = new AppEnvironment("test.user", "my-computer", "10.1.0.0", "Windows 10")
+                Environment = new AppEnvironment
+                (
+                    "test.user", "my-computer", "10.1.0.0", "Windows 10", "V1"
+                )
             });
+            services.AddSingleton<CurrentSession>();
             var sp = services.BuildServiceProvider();
             return new TestInput(sp);
         }
@@ -61,12 +84,14 @@ namespace XTI_TempLog.Tests
                 TempLog = (FakeTempLog)sp.GetService<TempLog>();
                 Clock = (FakeClock)sp.GetService<Clock>();
                 AppEnvironmentContext = (FakeAppEnvironmentContext)sp.GetService<IAppEnvironmentContext>();
+                CurrentSession = sp.GetService<CurrentSession>();
             }
 
             public TempSessionContext TempSessionContext { get; }
             public FakeTempLog TempLog { get; }
             public FakeClock Clock { get; }
             public FakeAppEnvironmentContext AppEnvironmentContext { get; }
+            public CurrentSession CurrentSession { get; }
         }
     }
 }
