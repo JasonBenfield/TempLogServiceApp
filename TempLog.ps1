@@ -2,10 +2,10 @@ Import-Module PowershellForXti -Force
 
 $script:tempLogConfig = [PSCustomObject]@{
     RepoOwner = "JasonBenfield"
-    RepoName = "XTI_WebApp"
-    AppKey = "XTI_WebApp"
-    AppType = "Package"
-    ProjectDir = "C:\XTI\src\XTI_WebApp\Apps\XTI_WebApp"
+    RepoName = "TempLogServiceApp"
+    AppKey = "TempLog"
+    AppType = "Service"
+    ProjectDir = "C:\XTI\src\TempLogServiceApp\Apps\TempLogServiceApp"
 }
 
 function TempLog-New-XtiIssue {
