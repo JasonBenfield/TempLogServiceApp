@@ -7,7 +7,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using XTI_App.Api;
 using XTI_ConsoleApp.Extensions;
+using XTI_Core;
+using XTI_Core.Fakes;
 using XTI_ServiceApp.Extensions;
+using XTI_TempLog.Fakes;
 
 namespace XTI_TempLog.Tests
 {
@@ -40,6 +43,11 @@ namespace XTI_TempLog.Tests
                     services.AddSingleton(sp => counter);
                     services.AddScoped<IAppApiUser, AppApiSuperUser>();
                     services.AddScoped<AppApi, TestApi>();
+                    services.AddScoped<Clock, FakeClock>();
+                    services.AddScoped<CurrentSession>();
+                    services.AddScoped<IAppEnvironmentContext, FakeAppEnvironmentContext>();
+                    services.AddScoped<TempLog, FakeTempLog>();
+                    services.AddScoped<TempSessionContext>();
                     services.AddHostedService(sp =>
                     {
                         var options = sp.GetService<IOptions<ConsoleAppOptions>>();

@@ -20,15 +20,14 @@ namespace XTI_ServiceApp.Extensions
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var worker = new AppWorker
+            var worker = new AppMiddleware
             (
                 sp,
                 options.ImmediateActions,
                 options.ScheduledActions,
                 options.AlwaysRunningActions
             );
-            var tasks = worker.Start(stoppingToken);
-            return Task.WhenAll(tasks);
+            return worker.Start(stoppingToken);
         }
     }
 }
