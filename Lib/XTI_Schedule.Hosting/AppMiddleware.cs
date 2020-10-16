@@ -2,31 +2,42 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using XTI_TempLog;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace XTI_Schedule.Hosting
 {
-    public sealed class AppWorker
+    public sealed class AppMiddleware
     {
         private readonly IServiceProvider sp;
         private readonly ImmediateActionOptions[] immediateActions;
         private readonly ScheduledActionOptions[] scheduledActions;
         private readonly AlwaysRunningActionOptions[] alwaysRunningActions;
 
-        public AppWorker
+        public AppMiddleware
         (
             IServiceProvider sp,
             ImmediateActionOptions[] immediateActions,
             ScheduledActionOptions[] scheduledActions,
             AlwaysRunningActionOptions[] alwaysRunningActions
-        )   
-        {   
+        )
+        {
             this.sp = sp;
             this.immediateActions = immediateActions;
             this.scheduledActions = scheduledActions;
             this.alwaysRunningActions = alwaysRunningActions;
         }
 
-        public Task[] Start(CancellationToken stoppingToken)
+        public async Task Start(CancellationToken stoppingToken)
+        {
+            var sessionContext = sp.GetService<TempSessionContext>();
+            await sessionContext.StartSession();
+            var tasks = getTasks(stoppingToken);
+            await Task.WhenAll(tasks);
+        }
+
+        private Task[] getTasks(CancellationToken stoppingToken)
         {
             var tasks = new List<Task>();
             foreach (var immediateActionOptions in immediateActions)

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\XTI_Schedule\XTI_Schedule.csproj" />
+    <ProjectReference Include="..\XTI_TempLog\XTI_TempLog.csproj" />
   </ItemGroup>
 
   <ItemGroup>

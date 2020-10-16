@@ -10,6 +10,7 @@ using XTI_App.Api;
 using XTI_Core;
 using XTI_Core.Fakes;
 using XTI_ServiceApp.Extensions;
+using XTI_TempLog.Fakes;
 
 namespace XTI_TempLog.Tests
 {
@@ -21,9 +22,9 @@ namespace XTI_TempLog.Tests
             var host = BuildHost().Build();
             var clock = (FakeClock)host.Services.GetService<Clock>();
             clock.Set(new DateTime(2020, 10, 16, 13, 30, 0, DateTimeKind.Utc));
+            var counter = host.Services.GetService<Counter>();
             var _ = Task.Run(() => host.Run());
             await Task.Delay(2000);
-            var counter = host.Services.GetService<Counter>();
             Assert.That(counter.Value, Is.GreaterThan(0));
             Console.WriteLine($"Counter value: {counter.Value}");
             await host.StopAsync();
@@ -35,9 +36,9 @@ namespace XTI_TempLog.Tests
             var host = BuildHost().Build();
             var clock = (FakeClock)host.Services.GetService<Clock>();
             clock.Set(new DateTime(2020, 10, 16, 14, 30, 0, DateTimeKind.Utc));
-            var _ = Task.Run(() => host.Run());
-            await Task.Delay(2000);
             var counter = host.Services.GetService<Counter>();
+            var _ = Task.Run(() => host.RunAsync());
+            await Task.Delay(2000);
             Assert.That(counter.Value, Is.EqualTo(0));
             await host.StopAsync();
         }
@@ -65,6 +66,10 @@ namespace XTI_TempLog.Tests
                     services.AddSingleton<Clock, FakeClock>();
                     services.AddSingleton<Counter>();
                     services.AddScoped<IAppApiUser, AppApiSuperUser>();
+                    services.AddScoped<IAppEnvironmentContext, FakeAppEnvironmentContext>();
+                    services.AddScoped<CurrentSession>();
+                    services.AddScoped<TempLog, FakeTempLog>();
+                    services.AddScoped<TempSessionContext>();
                     services.AddScoped<AppApi, TestApi>();
                     services.AddHostedService(sp =>
                     {
