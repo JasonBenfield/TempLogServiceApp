@@ -9,6 +9,7 @@ namespace XTI_TempLog
         public IEnumerable<ITempLogFile> StartSessionFiles() => Files(FileNames("startSession.*.log"));
         public IEnumerable<ITempLogFile> StartRequestFiles() => Files(FileNames("startRequest.*.log"));
         public IEnumerable<ITempLogFile> EndRequestFiles() => Files(FileNames("endRequest.*.log"));
+        public IEnumerable<ITempLogFile> AuthSessionFiles() => Files(FileNames("authSession.*.log"));
         public IEnumerable<ITempLogFile> EndSessionFiles() => Files(FileNames("endSession.*.log"));
         public IEnumerable<ITempLogFile> LogEventFiles() => Files(FileNames("event.*.log"));
 

@@ -106,6 +106,27 @@ namespace XTI_TempLog.Tests
         }
 
         [Test]
+        public async Task ShouldAuthenticateSession()
+        {
+            var input = setup();
+            await input.TempSessionContext.StartSession();
+            var userName = "test.user";
+            await input.TempSessionContext.AuthenticateSession(userName);
+            var authSession = await getSingleAuthSession(input);
+            var startSession = await getSingleStartSession(input);
+            Assert.That(authSession.SessionKey, Is.EqualTo(startSession.SessionKey), "Should have the same session key as the start session");
+            Assert.That(authSession.UserName, Is.EqualTo(userName), "Should set user name");
+        }
+
+        private static async Task<AuthenticateSessionModel> getSingleAuthSession(TestInput input)
+        {
+            var files = input.TempLog.AuthSessionFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one auth session file");
+            var serializedAuthSession = await files[0].Read();
+            return JsonSerializer.Deserialize<AuthenticateSessionModel>(serializedAuthSession);
+        }
+
+        [Test]
         public async Task ShouldLogError()
         {
             var input = setup();
@@ -129,17 +150,22 @@ namespace XTI_TempLog.Tests
             }
             var requestFiles = input.TempLog.StartRequestFiles().ToArray();
             var request = JsonSerializer.Deserialize<StartRequestModel>(await requestFiles[0].Read());
-            var eventFiles = input.TempLog.LogEventFiles().ToArray();
-            Assert.That(eventFiles.Length, Is.EqualTo(1));
-            var serializedSession = await eventFiles[0].Read();
-            var tempEvent = JsonSerializer.Deserialize<LogEventModel>(serializedSession);
-            Assert.That(string.IsNullOrWhiteSpace(tempEvent.EventKey), Is.False, "Should create event key");
-            Assert.That(tempEvent.RequestKey, Is.EqualTo(request.RequestKey), "Should set request key");
-            Assert.That(tempEvent.Severity, Is.EqualTo(AppEventSeverity.Values.CriticalError.Value), "Should set severity");
-            Assert.That(tempEvent.Caption, Is.EqualTo("An unexpected error occurred"), "Should set caption");
-            Assert.That(tempEvent.Message, Is.EqualTo(thrownException.Message), "Should set message");
-            Assert.That(tempEvent.Detail, Is.EqualTo(thrownException.StackTrace), "Should set detail");
-            Assert.That(tempEvent.TimeOccurred, Is.EqualTo(input.Clock.Now()), "Should set time occurred to the current time");
+            var logEvent = await getSingleLogEvent(input);
+            Assert.That(string.IsNullOrWhiteSpace(logEvent.EventKey), Is.False, "Should create event key");
+            Assert.That(logEvent.RequestKey, Is.EqualTo(request.RequestKey), "Should set request key");
+            Assert.That(logEvent.Severity, Is.EqualTo(AppEventSeverity.Values.CriticalError.Value), "Should set severity");
+            Assert.That(logEvent.Caption, Is.EqualTo("An unexpected error occurred"), "Should set caption");
+            Assert.That(logEvent.Message, Is.EqualTo(thrownException.Message), "Should set message");
+            Assert.That(logEvent.Detail, Is.EqualTo(thrownException.StackTrace), "Should set detail");
+            Assert.That(logEvent.TimeOccurred, Is.EqualTo(input.Clock.Now()), "Should set time occurred to the current time");
+        }
+
+        private static async Task<LogEventModel> getSingleLogEvent(TestInput input)
+        {
+            var files = input.TempLog.LogEventFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one log event file");
+            var serializedLogEvent = await files[0].Read();
+            return JsonSerializer.Deserialize<LogEventModel>(serializedLogEvent);
         }
 
         private TestInput setup()

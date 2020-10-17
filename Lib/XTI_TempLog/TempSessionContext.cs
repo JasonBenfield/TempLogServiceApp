@@ -37,8 +37,18 @@ namespace XTI_TempLog
             return log.Write($"startSession.{session.SessionKey}.log", serialized);
         }
 
-        private string requestKey;
+        public Task AuthenticateSession(string userName)
+        {
+            var session = new AuthenticateSessionModel
+            {
+                SessionKey = currentSession.SessionKey,
+                UserName = userName
+            };
+            var serialized = JsonSerializer.Serialize(session);
+            return log.Write($"authSession.{session.SessionKey}.log", serialized);
+        }
 
+        private string requestKey;
 
         public Task StartRequest(string path)
         {
