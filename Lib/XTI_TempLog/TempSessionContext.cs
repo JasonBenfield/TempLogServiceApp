@@ -34,7 +34,7 @@ namespace XTI_TempLog
                 RequesterKey = environment.RequesterKey
             };
             var serialized = JsonSerializer.Serialize(session);
-            return log.Write($"session.{session.SessionKey}.log", serialized);
+            return log.Write($"startSession.{session.SessionKey}.log", serialized);
         }
 
         private string requestKey;
@@ -52,7 +52,18 @@ namespace XTI_TempLog
                 TimeStarted = clock.Now()
             };
             var serialized = JsonSerializer.Serialize(request);
-            return log.Write($"request.{request.RequestKey}.log", serialized);
+            return log.Write($"startRequest.{request.RequestKey}.log", serialized);
+        }
+
+        public Task EndRequest()
+        {
+            var request = new EndRequestModel
+            {
+                RequestKey = requestKey,
+                TimeEnded = clock.Now()
+            };
+            var serialized = JsonSerializer.Serialize(request);
+            return log.Write($"endRequest.{request.RequestKey}.log", serialized);
         }
 
         public Task LogException(AppEventSeverity severity, Exception ex, string caption)
