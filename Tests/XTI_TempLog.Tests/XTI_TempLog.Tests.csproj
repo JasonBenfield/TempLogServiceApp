@@ -7,9 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.9" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.4.1-dev201015074500867" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\XTI_ConsoleApp.Extensions\XTI_ConsoleApp.Extensions.csproj" />
+    <ProjectReference Include="..\..\Lib\XTI_ServiceApp.Extensions\XTI_ServiceApp.Extensions.csproj" />
+    <ProjectReference Include="..\..\Lib\XTI_TempLog.Api\XTI_TempLog.Api.csproj" />
+    <ProjectReference Include="..\..\Lib\XTI_TempLog.Fakes\XTI_TempLog.Fakes.csproj" />
   </ItemGroup>
 
 </Project>
