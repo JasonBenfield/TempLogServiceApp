@@ -13,16 +13,6 @@ namespace XTI_TempLog.Tests
     public sealed class TempSessionContextTest
     {
         [Test]
-        public async Task ShouldWriteToLog_WhenStartingASession()
-        {
-            var input = setup();
-            await input.TempSessionContext.StartSession();
-            var files = input.
-                TempLog.Files();
-            Assert.That(files.Length, Is.EqualTo(1));
-        }
-
-        [Test]
         public async Task ShouldWriteSessionToLog_WhenStartingASession()
         {
             var input = setup();
@@ -35,6 +25,14 @@ namespace XTI_TempLog.Tests
             Assert.That(startSession.RequesterKey, Is.EqualTo(input.AppEnvironmentContext.Environment.RequesterKey), "Should set requester key from environment");
             Assert.That(startSession.UserAgent, Is.EqualTo(input.AppEnvironmentContext.Environment.UserAgent), "Should set user agent from environment");
             Assert.That(startSession.RemoteAddress, Is.EqualTo(input.AppEnvironmentContext.Environment.RemoteAddress), "Should set remote address from environment");
+        }
+
+        private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
+        {
+            var files = input.TempLog.StartSessionFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one start session file");
+            var serializedStartSession = await files[0].Read();
+            return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
         }
 
         private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
@@ -66,6 +64,25 @@ namespace XTI_TempLog.Tests
             Assert.That(files.Length, Is.EqualTo(1), "Should be one start request file");
             var serializedStartRequest = await files[0].Read();
             return JsonSerializer.Deserialize<StartRequestModel>(serializedStartRequest);
+        }
+
+        [Test]
+        public async Task ShouldWriteRequestToLog_WhenEndingARequest()
+        {
+            var input = setup();
+            await input.TempSessionContext.StartSession();
+            var path = "group1/action1";
+            await input.TempSessionContext.StartRequest(path);
+            input.Clock.Set(input.Clock.Now().AddMinutes(1));
+            await input.TempSessionContext.EndRequest();
+        }
+
+        private static async Task<EndRequestModel> getSingleEndRequest(TestInput input)
+        {
+            var files = input.TempLog.EndRequestFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one end request file");
+            var serializedEndRequest = await files[0].Read();
+            return JsonSerializer.Deserialize<EndRequestModel>(serializedEndRequest);
         }
 
         [Test]
