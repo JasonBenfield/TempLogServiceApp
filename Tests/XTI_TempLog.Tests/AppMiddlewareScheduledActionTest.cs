@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -15,45 +16,21 @@ using XTI_TempLog.Fakes;
 
 namespace XTI_TempLog.Tests
 {
-    public sealed class AppMiddlewareImmediateActionTest
+    public sealed class AppMiddlewareScheduledActionTest
     {
         [Test]
-        public async Task ShouldStartSession()
+        public async Task ShouldLogSessionsAndRequests()
         {
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
             var startSessionFiles = tempLog.StartSessionFiles();
-            Assert.That(startSessionFiles.Count(), Is.EqualTo(1), "Should start session");
-        }
-
-        [Test]
-        public async Task ShouldStartRequest()
-        {
-            var host = await runService();
-            var tempLog = host.Services.GetService<TempLog>();
+            Assert.That(startSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start session");
             var startRequestFiles = tempLog.StartRequestFiles();
-            Assert.That(startRequestFiles.Count(), Is.EqualTo(1), "Should start request");
-            var requestContent = await startRequestFiles.First().Read();
-            var request = JsonSerializer.Deserialize<StartRequestModel>(requestContent);
-            Assert.That(request.Path, Is.EqualTo("Test/Run"));
-        }
-
-        [Test]
-        public async Task ShouldEndRequest()
-        {
-            var host = await runService();
-            var tempLog = host.Services.GetService<TempLog>();
+            Assert.That(startRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start request");
             var endRequestFiles = tempLog.EndRequestFiles();
-            Assert.That(endRequestFiles.Count(), Is.EqualTo(1), "Should end request");
-        }
-
-        [Test]
-        public async Task ShouldEndSession()
-        {
-            var host = await runService();
-            var tempLog = host.Services.GetService<TempLog>();
+            Assert.That(endRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end request");
             var endSessionFiles = tempLog.EndSessionFiles();
-            Assert.That(endSessionFiles.Count(), Is.EqualTo(1), "Should end session");
+            Assert.That(endSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end session");
         }
 
         private async Task<IHost> runService()
@@ -73,6 +50,8 @@ namespace XTI_TempLog.Tests
                 "Windows 10",
                 "Current"
             );
+            var clock = (FakeClock)host.Services.GetService<Clock>();
+            clock.Set(new DateTime(2020, 10, 16, 13, 30, 0, DateTimeKind.Utc));
             var _ = Task.Run(() => host.StartAsync());
             var counter = host.Services.GetService<Counter>();
             while (counter.Value == 0)
@@ -91,9 +70,12 @@ namespace XTI_TempLog.Tests
                     config.Sources.Clear();
                     config.AddInMemoryCollection(new[]
                     {
-                        KeyValuePair.Create("ImmediateActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("ImmediateActions:0:ActionName", "Run"),
-                        KeyValuePair.Create("ImmediateActions:0:Interval", "500")
+                        KeyValuePair.Create("ScheduledActions:0:GroupName", "Test"),
+                        KeyValuePair.Create("ScheduledActions:0:ActionName", "Run"),
+                        KeyValuePair.Create("ScheduledActions:0:Interval", "500"),
+                        KeyValuePair.Create("ScheduledActions:0:Schedule:WeeklyTimeRanges:0:DaysOfWeek:0", "Friday"),
+                        KeyValuePair.Create("ScheduledActions:0:Schedule:WeeklyTimeRanges:0:TimeRanges:0:StartTime", "900"),
+                        KeyValuePair.Create("ScheduledActions:0:Schedule:WeeklyTimeRanges:0:TimeRanges:0:EndTime", "1000")
                     });
                 })
                 .UseWindowsService()

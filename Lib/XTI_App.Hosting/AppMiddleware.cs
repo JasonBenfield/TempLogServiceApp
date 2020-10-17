@@ -35,6 +35,7 @@ namespace XTI_App.Hosting
             await sessionContext.StartSession();
             var tasks = getTasks(stoppingToken);
             await Task.WhenAll(tasks);
+            await sessionContext.EndSession();
         }
 
         private Task[] getTasks(CancellationToken stoppingToken)

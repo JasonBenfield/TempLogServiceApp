@@ -37,6 +37,7 @@ namespace XTI_App.Hosting
                     .Action<EmptyRequest, EmptyActionResult>(options.ActionName);
                 var scheduledAction = new ScheduledAction(clock, schedule, action);
                 await scheduledAction.TryExecute();
+                await sessionContext.EndRequest();
                 await Task.Delay(options.Interval, stoppingToken);
             }
         }
