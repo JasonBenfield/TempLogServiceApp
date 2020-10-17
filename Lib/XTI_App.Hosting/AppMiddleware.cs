@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using XTI_Schedule;
 using XTI_TempLog;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace XTI_Schedule.Hosting
+namespace XTI_App.Hosting
 {
     public sealed class AppMiddleware
     {

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using XTI_App.Api;
 using XTI_Core;
@@ -14,7 +15,7 @@ using XTI_TempLog.Fakes;
 
 namespace XTI_TempLog.Tests
 {
-    public sealed class AppMiddlewareTest
+    public sealed class AppMiddlewareImmediateActionTest
     {
         [Test]
         public async Task ShouldStartSession()
@@ -23,6 +24,18 @@ namespace XTI_TempLog.Tests
             var tempLog = host.Services.GetService<TempLog>();
             var startSessionFiles = tempLog.StartSessionFiles();
             Assert.That(startSessionFiles.Count(), Is.EqualTo(1), "Should start session");
+        }
+
+        [Test]
+        public async Task ShouldStartRequest()
+        {
+            var host = await runService();
+            var tempLog = host.Services.GetService<TempLog>();
+            var startRequestFiles = tempLog.StartRequestFiles();
+            Assert.That(startRequestFiles.Count(), Is.EqualTo(1), "Should start request");
+            var requestContent = await startRequestFiles.First().Read();
+            var request = JsonSerializer.Deserialize<StartRequestModel>(requestContent);
+            Assert.That(request.Path, Is.EqualTo("Test/Run"));
         }
 
         private async Task<IHost> runService()

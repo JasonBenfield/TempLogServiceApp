@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using XTI_Schedule.Hosting;
+using XTI_App.Hosting;
 
 namespace XTI_ConsoleApp.Extensions
 {
