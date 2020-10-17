@@ -38,6 +38,24 @@ namespace XTI_TempLog.Tests
             Assert.That(request.Path, Is.EqualTo("Test/Run"));
         }
 
+        [Test]
+        public async Task ShouldEndRequest()
+        {
+            var host = await runService();
+            var tempLog = host.Services.GetService<TempLog>();
+            var endRequestFiles = tempLog.EndRequestFiles();
+            Assert.That(endRequestFiles.Count(), Is.EqualTo(1), "Should end request");
+        }
+
+        [Test]
+        public async Task ShouldEndSession()
+        {
+            var host = await runService();
+            var tempLog = host.Services.GetService<TempLog>();
+            var endSessionFiles = tempLog.EndSessionFiles();
+            Assert.That(endSessionFiles.Count(), Is.EqualTo(1), "Should end session");
+        }
+
         private async Task<IHost> runService()
         {
             var host = BuildHost().Build();

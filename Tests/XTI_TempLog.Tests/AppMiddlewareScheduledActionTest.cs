@@ -27,6 +27,10 @@ namespace XTI_TempLog.Tests
             Assert.That(startSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start session");
             var startRequestFiles = tempLog.StartRequestFiles();
             Assert.That(startRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start request");
+            var endRequestFiles = tempLog.EndRequestFiles();
+            Assert.That(endRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end request");
+            var endSessionFiles = tempLog.EndSessionFiles();
+            Assert.That(endSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end session");
         }
 
         private async Task<IHost> runService()

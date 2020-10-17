@@ -17,14 +17,22 @@ namespace XTI_TempLog.Tests
         {
             var input = setup();
             await input.TempSessionContext.StartSession();
-            var tempSession = await getSingleStartSession(input);
-            Assert.That(string.IsNullOrWhiteSpace(tempSession.SessionKey), Is.False, "Should create session key");
-            Assert.That(tempSession.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should set current session key");
-            Assert.That(tempSession.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
-            Assert.That(tempSession.UserName, Is.EqualTo(input.AppEnvironmentContext.Environment.UserName), "Should set user name from environment");
-            Assert.That(tempSession.RequesterKey, Is.EqualTo(input.AppEnvironmentContext.Environment.RequesterKey), "Should set requester key from environment");
-            Assert.That(tempSession.UserAgent, Is.EqualTo(input.AppEnvironmentContext.Environment.UserAgent), "Should set user agent from environment");
-            Assert.That(tempSession.RemoteAddress, Is.EqualTo(input.AppEnvironmentContext.Environment.RemoteAddress), "Should set remote address from environment");
+            var startSession = await getSingleStartSession(input);
+            Assert.That(string.IsNullOrWhiteSpace(startSession.SessionKey), Is.False, "Should create session key");
+            Assert.That(startSession.SessionKey, Is.EqualTo(input.CurrentSession.SessionKey), "Should set current session key");
+            Assert.That(startSession.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
+            Assert.That(startSession.UserName, Is.EqualTo(input.AppEnvironmentContext.Environment.UserName), "Should set user name from environment");
+            Assert.That(startSession.RequesterKey, Is.EqualTo(input.AppEnvironmentContext.Environment.RequesterKey), "Should set requester key from environment");
+            Assert.That(startSession.UserAgent, Is.EqualTo(input.AppEnvironmentContext.Environment.UserAgent), "Should set user agent from environment");
+            Assert.That(startSession.RemoteAddress, Is.EqualTo(input.AppEnvironmentContext.Environment.RemoteAddress), "Should set remote address from environment");
+        }
+
+        private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
+        {
+            var files = input.TempLog.StartSessionFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one start session file");
+            var serializedStartSession = await files[0].Read();
+            return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
         }
 
         private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
@@ -67,10 +75,6 @@ namespace XTI_TempLog.Tests
             await input.TempSessionContext.StartRequest(path);
             input.Clock.Set(input.Clock.Now().AddMinutes(1));
             await input.TempSessionContext.EndRequest();
-            var endRequest = await getSingleEndRequest(input);
-            var startRequest = await getSingleStartRequest(input);
-            Assert.That(endRequest.RequestKey, Is.EqualTo(startRequest.RequestKey), "Should have the same request key as the start request");
-            Assert.That(endRequest.TimeEnded, Is.EqualTo(input.Clock.Now()), "Should set time ended");
         }
 
         private static async Task<EndRequestModel> getSingleEndRequest(TestInput input)
@@ -79,6 +83,30 @@ namespace XTI_TempLog.Tests
             Assert.That(files.Length, Is.EqualTo(1), "Should be one end request file");
             var serializedEndRequest = await files[0].Read();
             return JsonSerializer.Deserialize<EndRequestModel>(serializedEndRequest);
+        }
+
+        [Test]
+        public async Task ShouldWriteSessionToLog_WhenEndingASession()
+        {
+            var input = setup();
+            await input.TempSessionContext.StartSession();
+            var path = "group1/action1";
+            await input.TempSessionContext.StartRequest(path);
+            input.Clock.Set(input.Clock.Now().AddMinutes(1));
+            await input.TempSessionContext.EndRequest();
+            await input.TempSessionContext.EndSession();
+            var endSession = await getSingleEndSession(input);
+            var startSession = await getSingleStartSession(input);
+            Assert.That(endSession.SessionKey, Is.EqualTo(startSession.SessionKey), "Should have the same session key as the start session");
+            Assert.That(endSession.TimeEnded, Is.EqualTo(input.Clock.Now()), "Should set time ended");
+        }
+
+        private static async Task<EndSessionModel> getSingleEndSession(TestInput input)
+        {
+            var files = input.TempLog.EndSessionFiles().ToArray();
+            Assert.That(files.Length, Is.EqualTo(1), "Should be one end session file");
+            var serializedEndSession = await files[0].Read();
+            return JsonSerializer.Deserialize<EndSessionModel>(serializedEndSession);
         }
 
         [Test]

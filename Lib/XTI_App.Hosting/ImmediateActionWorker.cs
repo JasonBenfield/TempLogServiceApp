@@ -31,6 +31,7 @@ namespace XTI_App.Hosting
                 .Group(options.GroupName)
                 .Action<EmptyRequest, EmptyActionResult>(options.ActionName);
             await action.Execute(new EmptyRequest());
+            await sessionContext.EndRequest();
         }
     }
 }

@@ -66,6 +66,17 @@ namespace XTI_TempLog
             return log.Write($"endRequest.{request.RequestKey}.log", serialized);
         }
 
+        public Task EndSession()
+        {
+            var request = new EndSessionModel
+            {
+                SessionKey = currentSession.SessionKey,
+                TimeEnded = clock.Now()
+            };
+            var serialized = JsonSerializer.Serialize(request);
+            return log.Write($"endSession.{request.SessionKey}.log", serialized);
+        }
+
         public Task LogException(AppEventSeverity severity, Exception ex, string caption)
         {
             var tempEvent = new LogEventModel
