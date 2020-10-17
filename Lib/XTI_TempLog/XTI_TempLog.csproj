@@ -6,7 +6,11 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
-    <PackageReference Include="XTI_Core" Version="1.4.1-dev201015074500867" />
+    <PackageReference Include="XTI_Core" Version="1.4.1-dev201017101440279" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XTI_TempLog.Abstractions\XTI_TempLog.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
