@@ -4,8 +4,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using XTI_App.Api;
+using XTI_Schedule;
+using XTI_TempLog;
 
-namespace XTI_Schedule.Hosting
+namespace XTI_App.Hosting
 {
     public sealed class ImmediateActionWorker : BackgroundService
     {
@@ -21,6 +23,9 @@ namespace XTI_Schedule.Hosting
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var scope = sp.CreateScope();
+            var path = $"{options.GroupName}/{options.ActionName}";
+            var sessionContext = scope.ServiceProvider.GetService<TempSessionContext>();
+            await sessionContext.StartRequest(path);
             var api = scope.ServiceProvider.GetService<AppApi>();
             var action = api
                 .Group(options.GroupName)

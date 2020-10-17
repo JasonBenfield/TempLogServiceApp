@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using XTI_App.Api;
 using XTI_Core;
+using XTI_Schedule;
+using XTI_TempLog;
 
-namespace XTI_Schedule.Hosting
+namespace XTI_App.Hosting
 {
     public sealed class ScheduledActionWorker : BackgroundService
     {
@@ -24,6 +26,9 @@ namespace XTI_Schedule.Hosting
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = sp.CreateScope();
+                var sessionContext = scope.ServiceProvider.GetService<TempSessionContext>();
+                var path = $"{options.GroupName}/{options.ActionName}";
+                await sessionContext.StartRequest(path);
                 var clock = scope.ServiceProvider.GetService<Clock>();
                 var schedule = new Schedule(options.Schedule);
                 var api = scope.ServiceProvider.GetService<AppApi>();

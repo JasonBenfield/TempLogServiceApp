@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\XTI_Schedule.Hosting\XTI_Schedule.Hosting.csproj" />
+    <ProjectReference Include="..\XTI_App.Hosting\XTI_App.Hosting.csproj" />
   </ItemGroup>
 
 </Project>
