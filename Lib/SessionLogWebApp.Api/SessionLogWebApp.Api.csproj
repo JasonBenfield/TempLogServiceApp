@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="XTI_App.Api" Version="1.4.1-dev201017101440279" />
+    <ProjectReference Include="..\PermanentLogGroupApi\PermanentLogGroupApi.csproj" />
   </ItemGroup>
 
 </Project>

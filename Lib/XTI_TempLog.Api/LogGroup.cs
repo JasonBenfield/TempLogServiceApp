@@ -1,10 +1,17 @@
 ﻿using XTI_App.Api;
+using XTI_TempLog.Abstractions;
 
 namespace XTI_TempLog.Api
 {
     public sealed class LogGroup : AppApiGroup
     {
-        public LogGroup(AppApi api, IAppApiUser user)
+        public LogGroup
+        (
+            AppApi api,
+            IAppApiUser user,
+            TempLog tempLog,
+            IPermanentLogClient permanentLogClient
+        )
             : base
             (
                 api,
@@ -19,7 +26,7 @@ namespace XTI_TempLog.Api
             MoveToPermanent = actions.Add
             (
                 nameof(MoveToPermanent),
-                () => new MoveToPermanentAction()
+                () => new MoveToPermanentAction(tempLog, permanentLogClient)
             );
         }
 

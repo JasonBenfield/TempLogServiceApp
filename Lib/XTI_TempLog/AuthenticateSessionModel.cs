@@ -1,6 +1,8 @@
-﻿namespace XTI_TempLog
+﻿using XTI_TempLog.Abstractions;
+
+namespace XTI_TempLog
 {
-    public sealed class AuthenticateSessionModel
+    public sealed class AuthenticateSessionModel : IAuthenticateSessionModel
     {
         public string SessionKey { get; set; }
         public string UserName { get; set; }
