@@ -35,14 +35,6 @@ namespace XTI_TempLog.Tests
             return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
         }
 
-        private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
-        {
-            var files = input.TempLog.StartSessionFiles().ToArray();
-            Assert.That(files.Length, Is.EqualTo(1), "Should be one start session file");
-            var serializedStartSession = await files[0].Read();
-            return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
-        }
-
         [Test]
         public async Task ShouldWriteRequestToLog_WhenStartingARequest()
         {
@@ -75,6 +67,10 @@ namespace XTI_TempLog.Tests
             await input.TempSessionContext.StartRequest(path);
             input.Clock.Set(input.Clock.Now().AddMinutes(1));
             await input.TempSessionContext.EndRequest();
+            var endRequest = await getSingleEndRequest(input);
+            var startRequest = await getSingleStartRequest(input);
+            Assert.That(endRequest.RequestKey, Is.EqualTo(startRequest.RequestKey), "Request key should be the same as the start request");
+            Assert.That(endRequest.TimeEnded, Is.EqualTo(input.Clock.Now()), "Should set the end time");
         }
 
         private static async Task<EndRequestModel> getSingleEndRequest(TestInput input)
