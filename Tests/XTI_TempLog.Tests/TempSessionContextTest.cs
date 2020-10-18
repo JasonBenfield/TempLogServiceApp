@@ -29,7 +29,7 @@ namespace XTI_TempLog.Tests
 
         private static async Task<StartSessionModel> getSingleStartSession(TestInput input)
         {
-            var files = input.TempLog.StartSessionFiles().ToArray();
+            var files = input.TempLog.StartSessionFiles(DateTime.Now).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one start session file");
             var serializedStartSession = await files[0].Read();
             return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
@@ -47,12 +47,13 @@ namespace XTI_TempLog.Tests
             Assert.That(startRequest.TimeStarted, Is.EqualTo(input.Clock.Now()), "Should start session");
             Assert.That(startRequest.Path, Is.EqualTo(path), "Should set path");
             Assert.That(string.IsNullOrWhiteSpace(startRequest.RequestKey), Is.False, "Should set request key");
+            Assert.That(startRequest.AppKey, Is.EqualTo(input.AppEnvironmentContext.Environment.AppKey), "Should set app key from environment");
             Assert.That(startRequest.VersionKey, Is.EqualTo(input.AppEnvironmentContext.Environment.VersionKey), "Should set version key from environment");
         }
 
         private static async Task<StartRequestModel> getSingleStartRequest(TestInput input)
         {
-            var files = input.TempLog.StartRequestFiles().ToArray();
+            var files = input.TempLog.StartRequestFiles(DateTime.Now).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one start request file");
             var serializedStartRequest = await files[0].Read();
             return JsonSerializer.Deserialize<StartRequestModel>(serializedStartRequest);
@@ -75,7 +76,7 @@ namespace XTI_TempLog.Tests
 
         private static async Task<EndRequestModel> getSingleEndRequest(TestInput input)
         {
-            var files = input.TempLog.EndRequestFiles().ToArray();
+            var files = input.TempLog.EndRequestFiles(input.Clock.Now()).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one end request file");
             var serializedEndRequest = await files[0].Read();
             return JsonSerializer.Deserialize<EndRequestModel>(serializedEndRequest);
@@ -99,7 +100,7 @@ namespace XTI_TempLog.Tests
 
         private static async Task<EndSessionModel> getSingleEndSession(TestInput input)
         {
-            var files = input.TempLog.EndSessionFiles().ToArray();
+            var files = input.TempLog.EndSessionFiles(input.Clock.Now()).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one end session file");
             var serializedEndSession = await files[0].Read();
             return JsonSerializer.Deserialize<EndSessionModel>(serializedEndSession);
@@ -120,7 +121,7 @@ namespace XTI_TempLog.Tests
 
         private static async Task<AuthenticateSessionModel> getSingleAuthSession(TestInput input)
         {
-            var files = input.TempLog.AuthSessionFiles().ToArray();
+            var files = input.TempLog.AuthSessionFiles(input.Clock.Now()).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one auth session file");
             var serializedAuthSession = await files[0].Read();
             return JsonSerializer.Deserialize<AuthenticateSessionModel>(serializedAuthSession);
@@ -148,7 +149,7 @@ namespace XTI_TempLog.Tests
                 );
                 thrownException = ex;
             }
-            var requestFiles = input.TempLog.StartRequestFiles().ToArray();
+            var requestFiles = input.TempLog.StartRequestFiles(input.Clock.Now()).ToArray();
             var request = JsonSerializer.Deserialize<StartRequestModel>(await requestFiles[0].Read());
             var logEvent = await getSingleLogEvent(input);
             Assert.That(string.IsNullOrWhiteSpace(logEvent.EventKey), Is.False, "Should create event key");
@@ -162,7 +163,7 @@ namespace XTI_TempLog.Tests
 
         private static async Task<LogEventModel> getSingleLogEvent(TestInput input)
         {
-            var files = input.TempLog.LogEventFiles().ToArray();
+            var files = input.TempLog.LogEventFiles(DateTime.Now).ToArray();
             Assert.That(files.Length, Is.EqualTo(1), "Should be one log event file");
             var serializedLogEvent = await files[0].Read();
             return JsonSerializer.Deserialize<LogEventModel>(serializedLogEvent);
@@ -178,7 +179,7 @@ namespace XTI_TempLog.Tests
             {
                 Environment = new AppEnvironment
                 (
-                    "test.user", "my-computer", "10.1.0.0", "Windows 10", "V1"
+                    "test.user", "my-computer", "10.1.0.0", "Windows 10", "Fake", "V1"
                 )
             });
             services.AddSingleton<CurrentSession>();

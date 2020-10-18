@@ -6,6 +6,8 @@ namespace XTI_TempLog.Abstractions
     {
         string RequestKey { get; set; }
         string SessionKey { get; set; }
+        string AppKey { get; set; }
+        int AppType { get; set; }
         string VersionKey { get; set; }
         string Path { get; set; }
         DateTime TimeStarted { get; set; }

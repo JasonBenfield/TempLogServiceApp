@@ -14,8 +14,9 @@
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
-    <PackageReference Include="XTI_App.EF" Version="1.4.1-dev201017101440279" />
-    <PackageReference Include="XTI_Core.Fakes" Version="1.4.1-dev201017101440279" />
+    <PackageReference Include="XTI_App.EF" Version="1.4.1-dev201017142645828" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.4.1-dev201017142645828" />
+    <PackageReference Include="XTI_WebApp.Fakes" Version="1.4.1-dev201017142645828" />
   </ItemGroup>
 
   <ItemGroup>

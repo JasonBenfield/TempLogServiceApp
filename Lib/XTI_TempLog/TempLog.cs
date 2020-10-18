@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -6,15 +7,17 @@ namespace XTI_TempLog
 {
     public abstract class TempLog
     {
-        public IEnumerable<ITempLogFile> StartSessionFiles() => Files(FileNames("startSession.*.log"));
-        public IEnumerable<ITempLogFile> StartRequestFiles() => Files(FileNames("startRequest.*.log"));
-        public IEnumerable<ITempLogFile> EndRequestFiles() => Files(FileNames("endRequest.*.log"));
-        public IEnumerable<ITempLogFile> AuthSessionFiles() => Files(FileNames("authSession.*.log"));
-        public IEnumerable<ITempLogFile> EndSessionFiles() => Files(FileNames("endSession.*.log"));
-        public IEnumerable<ITempLogFile> LogEventFiles() => Files(FileNames("event.*.log"));
+        public IEnumerable<ITempLogFile> StartSessionFiles(DateTime modifiedUntil) => Files(FileNames("startSession.*.log"), modifiedUntil);
+        public IEnumerable<ITempLogFile> StartRequestFiles(DateTime modifiedUntil) => Files(FileNames("startRequest.*.log"), modifiedUntil);
+        public IEnumerable<ITempLogFile> EndRequestFiles(DateTime modifiedUntil) => Files(FileNames("endRequest.*.log"), modifiedUntil);
+        public IEnumerable<ITempLogFile> AuthSessionFiles(DateTime modifiedUntil) => Files(FileNames("authSession.*.log"), modifiedUntil);
+        public IEnumerable<ITempLogFile> EndSessionFiles(DateTime modifiedUntil) => Files(FileNames("endSession.*.log"), modifiedUntil);
+        public IEnumerable<ITempLogFile> LogEventFiles(DateTime modifiedUntil) => Files(FileNames("event.*.log"), modifiedUntil);
 
-        private IEnumerable<ITempLogFile> Files(IEnumerable<string> fileNames)
-            => fileNames.Select(f => CreateFile(f));
+        private IEnumerable<ITempLogFile> Files(IEnumerable<string> fileNames, DateTime modifiedUntil)
+            => fileNames
+                .Select(f => CreateFile(f))
+                .Where(f => f.LastModified <= modifiedUntil);
 
         protected abstract IEnumerable<string> FileNames(string pattern);
 

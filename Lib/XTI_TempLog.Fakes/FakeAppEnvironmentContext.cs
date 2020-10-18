@@ -10,6 +10,7 @@
                 "AppMiddleware",
                 "my-computer",
                 "Windows 10",
+                "Fake",
                 "Current"
             );
         }

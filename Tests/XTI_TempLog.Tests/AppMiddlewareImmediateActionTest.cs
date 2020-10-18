@@ -22,7 +22,8 @@ namespace XTI_TempLog.Tests
         {
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
-            var startSessionFiles = tempLog.StartSessionFiles();
+            var clock = host.Services.GetService<Clock>();
+            var startSessionFiles = tempLog.StartSessionFiles(clock.Now());
             Assert.That(startSessionFiles.Count(), Is.EqualTo(1), "Should start session");
         }
 
@@ -31,7 +32,8 @@ namespace XTI_TempLog.Tests
         {
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
-            var startRequestFiles = tempLog.StartRequestFiles();
+            var clock = host.Services.GetService<Clock>();
+            var startRequestFiles = tempLog.StartRequestFiles(clock.Now());
             Assert.That(startRequestFiles.Count(), Is.EqualTo(1), "Should start request");
             var requestContent = await startRequestFiles.First().Read();
             var request = JsonSerializer.Deserialize<StartRequestModel>(requestContent);
@@ -43,7 +45,8 @@ namespace XTI_TempLog.Tests
         {
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
-            var endRequestFiles = tempLog.EndRequestFiles();
+            var clock = host.Services.GetService<Clock>();
+            var endRequestFiles = tempLog.EndRequestFiles(clock.Now());
             Assert.That(endRequestFiles.Count(), Is.EqualTo(1), "Should end request");
         }
 
@@ -52,7 +55,8 @@ namespace XTI_TempLog.Tests
         {
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
-            var endSessionFiles = tempLog.EndSessionFiles();
+            var clock = host.Services.GetService<Clock>();
+            var endSessionFiles = tempLog.EndSessionFiles(clock.Now());
             Assert.That(endSessionFiles.Count(), Is.EqualTo(1), "Should end session");
         }
 
@@ -71,6 +75,7 @@ namespace XTI_TempLog.Tests
                 "AppMiddleware",
                 "my-computer",
                 "Windows 10",
+                "Fake",
                 "Current"
             );
             var _ = Task.Run(() => host.StartAsync());
@@ -111,11 +116,7 @@ namespace XTI_TempLog.Tests
                     services.AddHostedService(sp =>
                     {
                         var options = sp.GetService<IOptions<ServiceAppOptions>>();
-                        return new ServiceAppWorker
-                        (
-                            sp,
-                            options
-                        );
+                        return new ServiceAppWorker(sp, options);
                     });
                 });
         }

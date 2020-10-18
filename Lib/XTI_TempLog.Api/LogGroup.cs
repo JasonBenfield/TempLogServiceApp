@@ -1,4 +1,5 @@
 ﻿using XTI_App.Api;
+using XTI_Core;
 using XTI_TempLog.Abstractions;
 
 namespace XTI_TempLog.Api
@@ -10,7 +11,8 @@ namespace XTI_TempLog.Api
             AppApi api,
             IAppApiUser user,
             TempLog tempLog,
-            IPermanentLogClient permanentLogClient
+            IPermanentLogClient permanentLogClient,
+            Clock clock
         )
             : base
             (
@@ -26,7 +28,7 @@ namespace XTI_TempLog.Api
             MoveToPermanent = actions.Add
             (
                 nameof(MoveToPermanent),
-                () => new MoveToPermanentAction(tempLog, permanentLogClient)
+                () => new MoveToPermanentAction(tempLog, permanentLogClient, clock)
             );
         }
 

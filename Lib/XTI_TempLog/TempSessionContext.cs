@@ -23,7 +23,7 @@ namespace XTI_TempLog
         public Task StartSession()
         {
             var environment = appEnvironmentContext.Value();
-            currentSession.SessionKey = Guid.NewGuid().ToString("N");
+            currentSession.SessionKey = generateKey();
             var session = new StartSessionModel
             {
                 SessionKey = currentSession.SessionKey,
@@ -52,18 +52,22 @@ namespace XTI_TempLog
 
         public Task StartRequest(string path)
         {
-            requestKey = Guid.NewGuid().ToString("N");
+            requestKey = generateKey();
+            var env = appEnvironmentContext.Value();
             var request = new StartRequestModel
             {
                 RequestKey = requestKey,
                 SessionKey = currentSession.SessionKey,
-                VersionKey = appEnvironmentContext.Value().VersionKey,
+                AppKey = env.AppKey,
+                VersionKey = env.VersionKey,
                 Path = path,
                 TimeStarted = clock.Now()
             };
             var serialized = JsonSerializer.Serialize(request);
             return log.Write($"startRequest.{request.RequestKey}.log", serialized);
         }
+
+        private string generateKey() => Guid.NewGuid().ToString("N");
 
         public Task EndRequest()
         {
@@ -91,7 +95,7 @@ namespace XTI_TempLog
         {
             var tempEvent = new LogEventModel
             {
-                EventKey = Guid.NewGuid().ToString("N"),
+                EventKey = generateKey(),
                 RequestKey = requestKey,
                 TimeOccurred = clock.Now(),
                 Severity = severity.Value,
