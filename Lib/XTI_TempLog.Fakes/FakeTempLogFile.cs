@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace XTI_TempLog.Fakes
 {
@@ -6,12 +7,14 @@ namespace XTI_TempLog.Fakes
     {
         private string contents;
 
-        public FakeTempLogFile(string name)
+        public FakeTempLogFile(string name, DateTime lastModified)
         {
             Name = name;
+            LastModified = lastModified;
         }
 
         public string Name { get; }
+        public DateTime LastModified { get; }
 
         public Task<string> Read() => Task.FromResult(contents);
 
@@ -20,5 +23,14 @@ namespace XTI_TempLog.Fakes
             this.contents = contents;
             return Task.CompletedTask;
         }
+
+        public void StartProcessing()
+        {
+        }
+
+        public event EventHandler Deleted;
+
+        public void Delete() => Deleted?.Invoke(this, new EventArgs());
+
     }
 }

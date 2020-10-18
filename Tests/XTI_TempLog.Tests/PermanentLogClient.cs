@@ -15,5 +15,20 @@ namespace XTI_TempLog.Tests
 
         public Task StartSession(IStartSessionModel model)
             => sessionLogApi.PermanentLog.StartSession.Execute((StartSessionModel)model);
+
+        public Task StartRequest(IStartRequestModel model)
+            => sessionLogApi.PermanentLog.StartRequest.Execute((StartRequestModel)model);
+
+        public Task EndRequest(IEndRequestModel model)
+            => sessionLogApi.PermanentLog.EndRequest.Execute((EndRequestModel)model);
+
+        public Task EndSession(IEndSessionModel model)
+            => sessionLogApi.PermanentLog.EndSession.Execute((EndSessionModel)model);
+
+        public Task AuthenticateSession(IAuthenticateSessionModel model)
+            => sessionLogApi.PermanentLog.AuthenticateSession.Execute((AuthenticateSessionModel)model);
+
+        public Task LogEvent(ILogEventModel model)
+            => sessionLogApi.PermanentLog.LogEvent.Execute((LogEventModel)model);
     }
 }

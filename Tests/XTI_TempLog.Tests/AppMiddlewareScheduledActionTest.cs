@@ -22,14 +22,15 @@ namespace XTI_TempLog.Tests
         public async Task ShouldLogSessionsAndRequests()
         {
             var host = await runService();
+            var clock = host.Services.GetService<Clock>();
             var tempLog = host.Services.GetService<TempLog>();
-            var startSessionFiles = tempLog.StartSessionFiles();
+            var startSessionFiles = tempLog.StartSessionFiles(clock.Now());
             Assert.That(startSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start session");
-            var startRequestFiles = tempLog.StartRequestFiles();
+            var startRequestFiles = tempLog.StartRequestFiles(clock.Now());
             Assert.That(startRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should start request");
-            var endRequestFiles = tempLog.EndRequestFiles();
+            var endRequestFiles = tempLog.EndRequestFiles(clock.Now());
             Assert.That(endRequestFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end request");
-            var endSessionFiles = tempLog.EndSessionFiles();
+            var endSessionFiles = tempLog.EndSessionFiles(clock.Now());
             Assert.That(endSessionFiles.Count(), Is.GreaterThanOrEqualTo(1), "Should end session");
         }
 
@@ -48,6 +49,7 @@ namespace XTI_TempLog.Tests
                 "AppMiddleware",
                 "my-computer",
                 "Windows 10",
+                "Fake",
                 "Current"
             );
             var clock = (FakeClock)host.Services.GetService<Clock>();

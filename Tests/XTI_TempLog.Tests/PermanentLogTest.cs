@@ -16,6 +16,7 @@ using XTI_App;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Text.Json;
+using XTI_WebApp.Fakes;
 
 namespace XTI_TempLog.Tests
 {
@@ -24,23 +25,115 @@ namespace XTI_TempLog.Tests
         [Test]
         public async Task ShouldStartSessionOnPermanentLog()
         {
-            var input = setup();
+            var input = await setup();
             await input.TempSessionContext.StartSession();
             var startSession = await getStartSession(input);
+            fastForward(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             var session = await input.Factory.Sessions().Session(startSession.SessionKey);
             Assert.That(session.HasStarted(), Is.True, "Should start session on permanent log");
             Assert.That(session.HasEnded(), Is.False, "Should start session on permanent log");
         }
 
+        [Test]
+        public async Task ShouldStartRequestOnPermanentLog()
+        {
+            var input = await setup();
+            await input.TempSessionContext.StartSession();
+            await input.TempSessionContext.StartRequest("Test/Run");
+            fastForward(input);
+            var startSession = await getStartSession(input);
+            await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
+            var session = await input.Factory.Sessions().Session(startSession.SessionKey);
+            var requests = (await session.Requests()).ToArray();
+            Assert.That(requests.Length, Is.EqualTo(1), "Should start request on permanent log");
+        }
+
+        [Test]
+        public async Task ShouldEndRequestOnPermanentLog()
+        {
+            var input = await setup();
+            await input.TempSessionContext.StartSession();
+            await input.TempSessionContext.StartRequest("Test/Run");
+            await input.TempSessionContext.EndRequest();
+            fastForward(input);
+            var startSession = await getStartSession(input);
+            await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
+            var session = await input.Factory.Sessions().Session(startSession.SessionKey);
+            var requests = (await session.Requests()).ToArray();
+            Assert.That(requests[0].HasEnded(), Is.True, "Should end request on permanent log");
+        }
+
+        [Test]
+        public async Task ShouldEndSessionOnPermanentLog()
+        {
+            var input = await setup();
+            await input.TempSessionContext.StartSession();
+            await input.TempSessionContext.StartRequest("Test/Run");
+            await input.TempSessionContext.EndRequest();
+            await input.TempSessionContext.EndSession();
+            fastForward(input);
+            var startSession = await getStartSession(input);
+            await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
+            var session = await input.Factory.Sessions().Session(startSession.SessionKey);
+            Assert.That(session.HasEnded(), Is.True, "Should end session on permanent log");
+        }
+
+        [Test]
+        public async Task ShouldAuthenticateSessionOnPermanentLog()
+        {
+            var input = await setup();
+            await input.TempSessionContext.StartSession();
+            await input.TempSessionContext.AuthenticateSession("someone");
+            fastForward(input);
+            var startSession = await getStartSession(input);
+            await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
+            var session = await input.Factory.Sessions().Session(startSession.SessionKey);
+            var user = await session.User();
+            Assert.That(user.UserName, Is.EqualTo("someone"), "Should authenticate session on permanent log");
+        }
+
+        [Test]
+        public async Task ShouldLogEventOnPermanentLog()
+        {
+            var input = await setup();
+            await input.TempSessionContext.StartSession();
+            await input.TempSessionContext.StartRequest("Test/Run");
+            try
+            {
+                throw new Exception("Test");
+            }
+            catch (Exception ex)
+            {
+                await input.TempSessionContext.LogException
+                (
+                    AppEventSeverity.Values.CriticalError,
+                    ex,
+                    "An unexpected error occurred"
+                );
+            }
+            fastForward(input);
+            var startSession = await getStartSession(input);
+            await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
+            var session = await input.Factory.Sessions().Session(startSession.SessionKey);
+            var requests = (await session.Requests()).ToArray();
+            var events = (await requests[0].Events()).ToArray();
+            Assert.That(events.Length, Is.EqualTo(1), "Should log event on permanent log");
+        }
+
         private static async Task<StartSessionModel> getStartSession(TestInput input)
         {
-            var files = input.TempLog.StartSessionFiles().ToArray();
+            var files = input.TempLog.StartSessionFiles(input.Clock.Now()).ToArray();
             var serializedStartSession = await files[0].Read();
             return JsonSerializer.Deserialize<StartSessionModel>(serializedStartSession);
         }
 
-        private TestInput setup()
+        private void fastForward(TestInput input)
+        {
+            input.Clock.Set(input.Clock.Now().AddSeconds(61));
+        }
+
+        private async Task<TestInput> setup()
         {
             var services = new ServiceCollection();
             services.AddScoped<TempLog, FakeTempLog>();
@@ -67,6 +160,14 @@ namespace XTI_TempLog.Tests
             });
             services.AddScoped<IPermanentLogClient, PermanentLogClient>();
             var sp = services.BuildServiceProvider();
+            var appFactory = sp.GetService<AppFactory>();
+            await new AppSetup(appFactory).Run();
+            var app = await appFactory.Apps().AddApp(new AppKey("Fake"), AppType.Values.WebApp, "Fake", DateTime.Now);
+            var version = await app.StartNewMajorVersion(DateTime.Now);
+            await version.Publishing();
+            await version.Published();
+            await appFactory.Users().Add(new AppUserName("test.user"), new FakeHashedPassword("Password12345"), DateTime.Now);
+            await appFactory.Users().Add(new AppUserName("Someone"), new FakeHashedPassword("Password12345"), DateTime.Now);
             return new TestInput(sp);
         }
 
