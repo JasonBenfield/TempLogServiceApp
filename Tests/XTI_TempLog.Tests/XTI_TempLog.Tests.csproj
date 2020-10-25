@@ -21,9 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\SessionLogWebApp.Api\SessionLogWebApp.Api.csproj" />
-    <ProjectReference Include="..\..\Lib\XTI_ConsoleApp.Extensions\XTI_ConsoleApp.Extensions.csproj" />
-    <ProjectReference Include="..\..\Lib\XTI_ServiceApp.Extensions\XTI_ServiceApp.Extensions.csproj" />
-    <ProjectReference Include="..\..\Lib\XTI_TempLog.Api\XTI_TempLog.Api.csproj" />
     <ProjectReference Include="..\..\Lib\XTI_TempLog.Fakes\XTI_TempLog.Fakes.csproj" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ Import-Module PowershellForXti -Force
 $script:tempLogConfig = [PSCustomObject]@{
     RepoOwner = "JasonBenfield"
     RepoName = "TempLogServiceApp"
-    AppKey = "TempLog"
+    AppName = "TempLog"
     AppType = "Service"
     ProjectDir = "C:\XTI\src\TempLogServiceApp\Apps\TempLogServiceApp"
 }
