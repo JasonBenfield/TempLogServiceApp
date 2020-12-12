@@ -9,13 +9,13 @@ namespace XTI_TempLog.Api
 {
     public sealed class MoveToPermanentAction : AppAction<EmptyRequest, EmptyActionResult>
     {
-        private readonly TempLog tempLog;
+        private readonly TempLogs tempLogs;
         private readonly IPermanentLogClient permanentLogClient;
         private readonly Clock clock;
 
-        public MoveToPermanentAction(TempLog tempLog, IPermanentLogClient permanentLogClient, Clock clock)
+        public MoveToPermanentAction(TempLogs tempLogs, IPermanentLogClient permanentLogClient, Clock clock)
         {
-            this.tempLog = tempLog;
+            this.tempLogs = tempLogs;
             this.permanentLogClient = permanentLogClient;
             this.clock = clock;
         }
@@ -23,70 +23,74 @@ namespace XTI_TempLog.Api
         public async Task<EmptyActionResult> Execute(EmptyRequest model)
         {
             var modifiedBefore = clock.Now().AddMinutes(-1);
-            var startSessionFiles = tempLog.StartSessionFiles(modifiedBefore);
-            foreach (var startSessionFile in startSessionFiles)
+            var logs = tempLogs.Logs();
+            foreach (var log in logs)
             {
-                await processFile<StartSessionModel>
-                (
-                    startSessionFile,
-                    model => permanentLogClient.StartSession(model)
-                );
-            }
-            var startRequestFiles = tempLog.StartRequestFiles(modifiedBefore);
-            foreach (var startRequestFile in startRequestFiles)
-            {
-                await processFile<StartRequestModel>
-                (
-                    startRequestFile,
-                    model => permanentLogClient.StartRequest(model)
-                );
-            }
-            var endRequestFiles = tempLog.EndRequestFiles(modifiedBefore);
-            foreach (var endRequestFile in endRequestFiles)
-            {
-                await processFile<EndRequestModel>
-                (
-                    endRequestFile,
-                    model => permanentLogClient.EndRequest(model)
-                );
-            }
-            var authSessionFiles = tempLog.AuthSessionFiles(modifiedBefore);
-            foreach (var authSessionFile in authSessionFiles)
-            {
-                await processFile<AuthenticateSessionModel>
-                (
-                    authSessionFile,
-                    model => permanentLogClient.AuthenticateSession(model)
-                );
-            }
-            var endSessionFiles = tempLog.EndSessionFiles(modifiedBefore);
-            foreach (var endSessionFile in endSessionFiles)
-            {
-                await processFile<EndSessionModel>
-                (
-                    endSessionFile,
-                    model => permanentLogClient.EndSession(model)
-                );
-            }
-            var logEventFiles = tempLog.LogEventFiles(modifiedBefore);
-            foreach (var logEventFile in logEventFiles)
-            {
-                await processFile<LogEventModel>
-                (
-                    logEventFile,
-                    model => permanentLogClient.LogEvent(model)
-                );
+                var startSessionFiles = log.StartSessionFiles(modifiedBefore);
+                foreach (var startSessionFile in startSessionFiles)
+                {
+                    await processFile<StartSessionModel>
+                    (
+                        startSessionFile,
+                        model => permanentLogClient.StartSession(model)
+                    );
+                }
+                var startRequestFiles = log.StartRequestFiles(modifiedBefore);
+                foreach (var startRequestFile in startRequestFiles)
+                {
+                    await processFile<StartRequestModel>
+                    (
+                        startRequestFile,
+                        model => permanentLogClient.StartRequest(model)
+                    );
+                }
+                var endRequestFiles = log.EndRequestFiles(modifiedBefore);
+                foreach (var endRequestFile in endRequestFiles)
+                {
+                    await processFile<EndRequestModel>
+                    (
+                        endRequestFile,
+                        model => permanentLogClient.EndRequest(model)
+                    );
+                }
+                var authSessionFiles = log.AuthSessionFiles(modifiedBefore);
+                foreach (var authSessionFile in authSessionFiles)
+                {
+                    await processFile<AuthenticateSessionModel>
+                    (
+                        authSessionFile,
+                        model => permanentLogClient.AuthenticateSession(model)
+                    );
+                }
+                var endSessionFiles = log.EndSessionFiles(modifiedBefore);
+                foreach (var endSessionFile in endSessionFiles)
+                {
+                    await processFile<EndSessionModel>
+                    (
+                        endSessionFile,
+                        model => permanentLogClient.EndSession(model)
+                    );
+                }
+                var logEventFiles = log.LogEventFiles(modifiedBefore);
+                foreach (var logEventFile in logEventFiles)
+                {
+                    await processFile<LogEventModel>
+                    (
+                        logEventFile,
+                        model => permanentLogClient.LogEvent(model)
+                    );
+                }
             }
             return new EmptyActionResult();
         }
 
         private async Task processFile<TModel>(ITempLogFile file, Func<TModel, Task> permanentLogAction)
         {
-            file.StartProcessing();
-            var content = await file.Read();
+            var renamedFile = file.WithNewName($"{file.Name}.processing");
+            var content = await renamedFile.Read();
             var model = JsonSerializer.Deserialize<TModel>(content);
             await permanentLogAction(model);
-            file.Delete();
+            renamedFile.Delete();
         }
     }
 }

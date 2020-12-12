@@ -15,11 +15,10 @@ namespace XTI_TempLog.Tests
     }
     public sealed class TestApi : AppApi
     {
-        private static readonly string appKeyValue = "Test";
-        public static readonly AppKey AppKey = new AppKey(appKeyValue);
+        public static readonly AppKey AppKey = new AppKey("Test", AppType.Values.WebApp);
 
         public TestApi(IAppApiUser user, Counter counter)
-            : base(appKeyValue, "Current", user, ResourceAccess.AllowAuthenticated())
+            : base(AppKey, AppVersionKey.Current, user, ResourceAccess.AllowAuthenticated())
         {
             Test = AddGroup(u => new TestGroup(this, u, counter));
         }
@@ -34,7 +33,7 @@ namespace XTI_TempLog.Tests
             (
                 api,
                 new NameFromGroupClassName(nameof(TestGroup)).Value,
-                false,
+                ModifierCategoryName.Default,
                 api.Access,
                 user,
                 (n, a, u) => new AppApiActionCollection(n, a, u)
