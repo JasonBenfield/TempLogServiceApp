@@ -7,19 +7,17 @@ namespace XTI_TempLog.Api
 {
     public sealed class TempLogApi : AppApi
     {
-        private static readonly string appKeyValue = "TempLog";
-        public static readonly AppKey AppKey = new AppKey(appKeyValue);
-
         public TempLogApi
         (
+            AppKey appKey,
             IAppApiUser user,
-            TempLog tempLog,
+            TempLogs tempLogs,
             IPermanentLogClient permanentLogClient,
             Clock clock
         )
-            : base(appKeyValue, "Current", user, ResourceAccess.AllowAuthenticated())
+            : base(appKey, AppVersionKey.Current, user, ResourceAccess.AllowAuthenticated())
         {
-            Log = AddGroup(u => new LogGroup(this, u, tempLog, permanentLogClient, clock));
+            Log = AddGroup(u => new LogGroup(this, u, tempLogs, permanentLogClient, clock));
         }
 
         public LogGroup Log { get; }

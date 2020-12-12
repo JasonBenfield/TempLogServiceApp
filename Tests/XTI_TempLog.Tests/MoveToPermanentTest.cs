@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
-using SessionLogWebApp.Api;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -20,20 +20,20 @@ namespace XTI_TempLog.Tests
         public async Task ShouldStartSessionOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
+            var session = await input.TempSession.StartSession();
             fastForward(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             var startSessions = input.PermanentLogClient.StartSessions();
             Assert.That(startSessions.Length, Is.EqualTo(1), "Should start session on permanent log");
-            Assert.That(startSessions[0].SessionKey, Is.EqualTo(input.CurrentSession.SessionKey));
+            Assert.That(startSessions[0].SessionKey, Is.EqualTo(session.SessionKey));
         }
 
         [Test]
         public async Task ShouldStartRequestOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
             fastForward(input);
             var startRequest = await getSingleStartRequest(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
@@ -46,9 +46,9 @@ namespace XTI_TempLog.Tests
         public async Task ShouldEndRequestOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
-            await input.TempSessionContext.EndRequest();
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
+            await input.TempSession.EndRequest();
             fastForward(input);
             var startRequest = await getSingleStartRequest(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
@@ -61,45 +61,45 @@ namespace XTI_TempLog.Tests
         public async Task ShouldEndSessionOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
-            await input.TempSessionContext.EndRequest();
-            await input.TempSessionContext.EndSession();
+            var session = await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
+            await input.TempSession.EndRequest();
+            await input.TempSession.EndSession();
             fastForward(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             var endSessions = input.PermanentLogClient.EndSessions();
             Assert.That(endSessions.Length, Is.EqualTo(1), "Should end session on permanent log");
-            Assert.That(endSessions[0].SessionKey, Is.EqualTo(input.CurrentSession.SessionKey));
+            Assert.That(endSessions[0].SessionKey, Is.EqualTo(session.SessionKey));
         }
 
         [Test]
         public async Task ShouldAuthenticateSessionOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
-            await input.TempSessionContext.EndRequest();
-            await input.TempSessionContext.AuthenticateSession("test.user");
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
+            await input.TempSession.EndRequest();
+            await input.TempSession.AuthenticateSession("test.user");
             fastForward(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             var authSessions = input.PermanentLogClient.AuthSessions();
             Assert.That(authSessions.Length, Is.EqualTo(1), "Should authenticate session on permanent log");
-            Assert.That(authSessions[0].SessionKey, Is.EqualTo(input.CurrentSession.SessionKey));
+            Assert.That(authSessions[0].UserName, Is.EqualTo(input.AppEnvironmentContext.Environment.UserName));
         }
 
         [Test]
         public async Task ShouldLogEventsOnPermanentLog()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
             try
             {
                 throw new Exception("Testing");
             }
             catch (Exception ex)
             {
-                await input.TempSessionContext.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
+                await input.TempSession.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
             }
             fastForward(input);
             var startRequest = await getSingleStartRequest(input);
@@ -113,19 +113,19 @@ namespace XTI_TempLog.Tests
         public async Task ShouldOnlyMoveFilesBeforeAMinuteAgo()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
-            await input.TempSessionContext.AuthenticateSession("test.user");
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
+            await input.TempSession.AuthenticateSession("test.user");
             try
             {
                 throw new Exception("Testing");
             }
             catch (Exception ex)
             {
-                await input.TempSessionContext.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
+                await input.TempSession.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
             }
-            await input.TempSessionContext.EndRequest();
-            await input.TempSessionContext.EndSession();
+            await input.TempSession.EndRequest();
+            await input.TempSession.EndSession();
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             Assert.That(input.PermanentLogClient.StartSessions().Length, Is.EqualTo(0));
             Assert.That(input.PermanentLogClient.StartRequests().Length, Is.EqualTo(0));
@@ -139,19 +139,19 @@ namespace XTI_TempLog.Tests
         public async Task ShouldProcessFilesOnlyOnce()
         {
             var input = setup();
-            await input.TempSessionContext.StartSession();
-            await input.TempSessionContext.StartRequest("Test/Run");
-            await input.TempSessionContext.AuthenticateSession("test.user");
+            await input.TempSession.StartSession();
+            await input.TempSession.StartRequest("Test/Run");
+            await input.TempSession.AuthenticateSession("test.user");
             try
             {
                 throw new Exception("Testing");
             }
             catch (Exception ex)
             {
-                await input.TempSessionContext.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
+                await input.TempSession.LogException(AppEventSeverity.Values.CriticalError, ex, "Test error");
             }
-            await input.TempSessionContext.EndRequest();
-            await input.TempSessionContext.EndSession();
+            await input.TempSession.EndRequest();
+            await input.TempSession.EndSession();
             fastForward(input);
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
             await input.TempLogApi.Log.MoveToPermanent.Execute(new EmptyRequest());
@@ -177,38 +177,42 @@ namespace XTI_TempLog.Tests
 
         private TestInput setup()
         {
-            var services = new ServiceCollection();
-            services.AddScoped<TempLog, FakeTempLog>();
-            services.AddScoped<TempSessionContext>();
-            services.AddScoped<Clock, FakeClock>();
-            services.AddScoped<IAppEnvironmentContext, FakeAppEnvironmentContext>();
-            services.AddSingleton<CurrentSession>();
-            services.AddScoped<IAppApiUser, AppApiSuperUser>();
-            services.AddScoped<TempLogApi>();
-            services.AddScoped<SessionLogApi>();
-            services.AddScoped<IPermanentLogClient, FakePermanentLogClient>();
-            var sp = services.BuildServiceProvider();
-            return new TestInput(sp);
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices
+                (
+                    services =>
+                    {
+                        services.AddFakeTempLogServices();
+                        services.AddScoped<TempLogs, FakeTempLogs>();
+                        services.AddSingleton<Clock, FakeClock>();
+                        services.AddScoped<IAppEnvironmentContext, FakeAppEnvironmentContext>();
+                        services.AddScoped<IAppApiUser, AppApiSuperUser>();
+                        services.AddSingleton(sp => TempLogAppKey.AppKey);
+                        services.AddScoped<TempLogApi>();
+                        services.AddScoped<IPermanentLogClient, FakePermanentLogClient>();
+                    }
+                )
+                .Build();
+            var scope = host.Services.CreateScope();
+            return new TestInput(scope.ServiceProvider);
         }
 
         private sealed class TestInput
         {
             public TestInput(IServiceProvider sp)
             {
-                TempSessionContext = sp.GetService<TempSessionContext>();
+                TempSession = sp.GetService<TempLogSession>();
                 TempLog = (FakeTempLog)sp.GetService<TempLog>();
                 Clock = (FakeClock)sp.GetService<Clock>();
                 AppEnvironmentContext = (FakeAppEnvironmentContext)sp.GetService<IAppEnvironmentContext>();
-                CurrentSession = sp.GetService<CurrentSession>();
                 TempLogApi = sp.GetService<TempLogApi>();
                 PermanentLogClient = (FakePermanentLogClient)sp.GetService<IPermanentLogClient>();
             }
 
-            public TempSessionContext TempSessionContext { get; }
+            public TempLogSession TempSession { get; }
             public FakeTempLog TempLog { get; }
             public FakeClock Clock { get; }
             public FakeAppEnvironmentContext AppEnvironmentContext { get; }
-            public CurrentSession CurrentSession { get; }
             public TempLogApi TempLogApi { get; }
             public FakePermanentLogClient PermanentLogClient { get; }
         }

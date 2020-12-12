@@ -56,7 +56,23 @@ function TempLog-Xti-PostMerge {
 
 function TempLog-Publish {
     param(
-        [switch] $Prod
+        [ValidateSet("Production", “Development", "Staging", "Test")]
+        [string] $EnvName="Production"
     )
-    $script:tempLogConfig | Xti-PublishPackage @PsBoundParameters
+    $ErrorActionPreference = "Stop"
+
+    $activity = "Publishing to $EnvName"
+    
+    Write-Progress -Activity $activity -Status "Building solution" -PercentComplete 50
+    dotnet build 
+    
+    Write-Progress -Activity $activity -Status "Publishing service app" -PercentComplete 80
+    if($EnvName -eq "Production") {
+        $branch = Get-CurrentBranchname
+        Xti-BeginPublish -BranchName $branch
+    }
+    $script:tempLogConfig | Xti-PublishServiceApp @PsBoundParameters
+    if($EnvName -eq "Production") {
+        Xti-EndPublish -BranchName $branch
+    }
 }

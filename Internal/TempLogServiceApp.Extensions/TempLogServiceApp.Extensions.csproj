@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SessionLogWebApp.Client" Version="1.0.1-dev201129090408239" />
+    <PackageReference Include="XTI_AuthenticatorClient.Extensions" Version="1.2.1-dev201129072554292" />
+    <PackageReference Include="XTI_ServiceApp.Extensions" Version="1.0.1-dev201129063005035" />
+    <PackageReference Include="XTI_TempLog.Extensions" Version="1.0.1-dev201129072903297" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XTI_TempLog.Api\XTI_TempLog.Api.csproj" />
+  </ItemGroup>
+
+</Project>
