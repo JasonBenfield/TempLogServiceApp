@@ -3,7 +3,7 @@ Import-Module PowershellForXti -Force
 $script:tempLogConfig = [PSCustomObject]@{
     RepoOwner = "JasonBenfield"
     RepoName = "TempLogServiceApp"
-    AppKey = "TempLog"
+    AppName = "TempLog"
     AppType = "Service"
     ProjectDir = "C:\XTI\src\TempLogServiceApp\Apps\TempLogServiceApp"
 }
@@ -13,7 +13,8 @@ function TempLog-New-XtiIssue {
         [Parameter(Mandatory, Position=0)]
         [string] $IssueTitle,
         $Labels = @(),
-        [string] $Body = ""
+        [string] $Body = "",
+        [switch] $Start
     )
     $script:tempLogConfig | New-XtiIssue @PsBoundParameters
 }
@@ -39,6 +40,14 @@ function TempLog-New-XtiVersion {
     $script:tempLogConfig | New-XtiVersion @PsBoundParameters
 }
 
+function TempLog-Xti-Merge {
+    param(
+        [Parameter(Position=0)]
+        [string] $CommitMessage
+    )
+    $script:tempLogConfig | Xti-Merge @PsBoundParameters
+}
+
 function TempLog-New-XtiPullRequest {
     param(
         [Parameter(Position=0)]
@@ -55,7 +64,23 @@ function TempLog-Xti-PostMerge {
 
 function TempLog-Publish {
     param(
-        [switch] $Prod
+        [ValidateSet("Production", “Development", "Staging", "Test")]
+        [string] $EnvName="Production"
     )
-    $script:tempLogConfig | Xti-PublishPackage @PsBoundParameters
+    $ErrorActionPreference = "Stop"
+
+    $activity = "Publishing to $EnvName"
+    
+    Write-Progress -Activity $activity -Status "Building solution" -PercentComplete 50
+    dotnet build 
+    
+    Write-Progress -Activity $activity -Status "Publishing service app" -PercentComplete 80
+    if($EnvName -eq "Production") {
+        $branch = Get-CurrentBranchname
+        Xti-BeginPublish -BranchName $branch
+    }
+    $script:tempLogConfig | Xti-PublishServiceApp @PsBoundParameters
+    if($EnvName -eq "Production") {
+        Xti-EndPublish -BranchName $branch
+    }
 }

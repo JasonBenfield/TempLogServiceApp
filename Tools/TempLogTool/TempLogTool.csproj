@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MainDB.EF.SqlServer" Version="1.7.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+    <PackageReference Include="XTI_Configuration.Extensions" Version="1.8.2" />
+    <PackageReference Include="SessionLogWebApp.Client" Version="1.1.1" />
+    <PackageReference Include="XTI_AuthenticatorClient.Extensions" Version="1.3.0" />
+    <PackageReference Include="XTI_Secrets.Extensions" Version="1.7.3" />
+    <PackageReference Include="XTI_TempLog.Extensions" Version="1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Internal\XTI_TempLog.Api\XTI_TempLog.Api.csproj" />
+  </ItemGroup>
+
+</Project>

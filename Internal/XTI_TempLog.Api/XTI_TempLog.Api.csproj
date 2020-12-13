@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="XTI_App.Api" Version="1.6.5" />
+    <PackageReference Include="XTI_TempLog" Version="1.2.1" />
+  </ItemGroup>
+
+</Project>
