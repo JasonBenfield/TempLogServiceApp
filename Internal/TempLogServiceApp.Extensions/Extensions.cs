@@ -29,7 +29,9 @@ namespace TempLogServiceApp.Extensions
                 var httpClientFactory = sp.GetService<IHttpClientFactory>();
                 var xtiToken = sp.GetService<XtiToken>();
                 var appOptions = sp.GetService<IOptions<AppOptions>>().Value;
-                return new SessionLogAppClient(httpClientFactory, xtiToken, appOptions.BaseUrl);
+                var env = sp.GetService<IHostEnvironment>();
+                var versionKey = env.IsProduction() ? "" : AppVersionKey.Current.Value;
+                return new SessionLogAppClient(httpClientFactory, xtiToken, appOptions.BaseUrl, versionKey);
             });
             services.AddScoped<IPermanentLogClient, PermanentLogClient>();
             services.AddScoped<TempLogs>(sp =>

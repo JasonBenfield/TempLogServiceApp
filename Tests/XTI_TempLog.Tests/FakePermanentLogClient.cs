@@ -65,5 +65,33 @@ namespace XTI_TempLog.Tests
             logEvents.Add(model);
             return Task.CompletedTask;
         }
+
+        public async Task LogBatch(ILogBatchModel model)
+        {
+            foreach (var startSession in model.StartSessions)
+            {
+                await StartSession(startSession);
+            }
+            foreach (var authSession in model.AuthenticateSessions)
+            {
+                await AuthenticateSession(authSession);
+            }
+            foreach (var startRequest in model.StartRequests)
+            {
+                await StartRequest(startRequest);
+            }
+            foreach (var logEvent in model.LogEvents)
+            {
+                await LogEvent(logEvent);
+            }
+            foreach (var endRequest in model.EndRequests)
+            {
+                await EndRequest(endRequest);
+            }
+            foreach (var endSession in model.EndSessions)
+            {
+                await EndSession(endSession);
+            }
+        }
     }
 }
