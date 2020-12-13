@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using XTI_App.Api;
@@ -24,73 +26,66 @@ namespace XTI_TempLog.Api
         {
             var modifiedBefore = clock.Now().AddMinutes(-1);
             var logs = tempLogs.Logs();
-            foreach (var log in logs)
+            var logBatch = await processBatch(modifiedBefore, logs);
+            while (hasMoreToProcess(logBatch))
             {
-                var startSessionFiles = log.StartSessionFiles(modifiedBefore);
-                foreach (var startSessionFile in startSessionFiles)
-                {
-                    await processFile<StartSessionModel>
-                    (
-                        startSessionFile,
-                        model => permanentLogClient.StartSession(model)
-                    );
-                }
-                var startRequestFiles = log.StartRequestFiles(modifiedBefore);
-                foreach (var startRequestFile in startRequestFiles)
-                {
-                    await processFile<StartRequestModel>
-                    (
-                        startRequestFile,
-                        model => permanentLogClient.StartRequest(model)
-                    );
-                }
-                var endRequestFiles = log.EndRequestFiles(modifiedBefore);
-                foreach (var endRequestFile in endRequestFiles)
-                {
-                    await processFile<EndRequestModel>
-                    (
-                        endRequestFile,
-                        model => permanentLogClient.EndRequest(model)
-                    );
-                }
-                var authSessionFiles = log.AuthSessionFiles(modifiedBefore);
-                foreach (var authSessionFile in authSessionFiles)
-                {
-                    await processFile<AuthenticateSessionModel>
-                    (
-                        authSessionFile,
-                        model => permanentLogClient.AuthenticateSession(model)
-                    );
-                }
-                var endSessionFiles = log.EndSessionFiles(modifiedBefore);
-                foreach (var endSessionFile in endSessionFiles)
-                {
-                    await processFile<EndSessionModel>
-                    (
-                        endSessionFile,
-                        model => permanentLogClient.EndSession(model)
-                    );
-                }
-                var logEventFiles = log.LogEventFiles(modifiedBefore);
-                foreach (var logEventFile in logEventFiles)
-                {
-                    await processFile<LogEventModel>
-                    (
-                        logEventFile,
-                        model => permanentLogClient.LogEvent(model)
-                    );
-                }
+                await permanentLogClient.LogBatch(logBatch);
+                logBatch = await processBatch(modifiedBefore, logs);
             }
             return new EmptyActionResult();
         }
 
-        private async Task processFile<TModel>(ITempLogFile file, Func<TModel, Task> permanentLogAction)
+        private static bool hasMoreToProcess(LogBatchModel logBatch)
         {
-            var renamedFile = file.WithNewName($"{file.Name}.processing");
-            var content = await renamedFile.Read();
-            var model = JsonSerializer.Deserialize<TModel>(content);
-            await permanentLogAction(model);
-            renamedFile.Delete();
+            return logBatch.StartSessions.Any()
+                || logBatch.StartRequests.Any()
+                || logBatch.AuthenticateSessions.Any()
+                || logBatch.LogEvents.Any()
+                || logBatch.EndRequests.Any()
+                || logBatch.EndSessions.Any();
+        }
+
+        private async Task<LogBatchModel> processBatch(DateTime modifiedBefore, IEnumerable<TempLog> logs)
+        {
+            var logBatch = new LogBatchModel();
+            logBatch.StartSessions = await processFiles<StartSessionModel>(logs.SelectMany(l => l.StartSessionFiles(modifiedBefore)));
+            logBatch.StartRequests = await processFiles<StartRequestModel>(logs.SelectMany(l => l.StartRequestFiles(modifiedBefore)));
+            logBatch.AuthenticateSessions = await processFiles<AuthenticateSessionModel>(logs.SelectMany(l => l.AuthSessionFiles(modifiedBefore)));
+            logBatch.LogEvents = await processFiles<LogEventModel>(logs.SelectMany(l => l.LogEventFiles(modifiedBefore)));
+            logBatch.EndRequests = await processFiles<EndRequestModel>(logs.SelectMany(l => l.EndRequestFiles(modifiedBefore)));
+            logBatch.EndSessions = await processFiles<EndSessionModel>(logs.SelectMany(l => l.EndSessionFiles(modifiedBefore)));
+            return logBatch;
+        }
+
+        private async Task<T[]> processFiles<T>(IEnumerable<ITempLogFile> files)
+        {
+            var filesToProcess = startProcessing(files.Take(50)).ToArray();
+            var models = await deserializeFiles<T>(filesToProcess);
+            deleteFiles(filesToProcess);
+            return models.ToArray();
+        }
+
+        private IEnumerable<ITempLogFile> startProcessing(IEnumerable<ITempLogFile> files)
+            => files.Select(f => f.WithNewName($"{f.Name}.processing"));
+
+        private async Task<IEnumerable<T>> deserializeFiles<T>(IEnumerable<ITempLogFile> files)
+        {
+            var deserialized = new List<T>();
+            foreach (var file in files)
+            {
+                var content = await file.Read();
+                var model = JsonSerializer.Deserialize<T>(content);
+                deserialized.Add(model);
+            }
+            return deserialized;
+        }
+
+        private void deleteFiles(IEnumerable<ITempLogFile> files)
+        {
+            foreach (var file in files)
+            {
+                file.Delete();
+            }
         }
     }
 }
