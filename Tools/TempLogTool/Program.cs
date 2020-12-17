@@ -16,6 +16,7 @@ using XTI_TempLog.Api;
 using XTI_TempLog.Extensions;
 using XTI_WebAppClient;
 using XTI_Secrets.Extensions;
+using XTI_AuthenticatorClient.Extensions;
 
 namespace TempLogTool
 {
@@ -34,8 +35,11 @@ namespace TempLogTool
                     services.AddAppDbContextForSqlServer(hostContext.Configuration);
                     services.AddScoped<AppFactory>();
                     services.AddScoped<Clock, UtcClock>();
+                    services.Configure<AppOptions>(hostContext.Configuration.GetSection(AppOptions.App));
                     services.AddSingleton(_ => TempLogAppKey.AppKey);
                     services.AddSingleton<IAppApiUser, AppApiSuperUser>();
+                    services.AddFileSecretCredentials();
+                    services.AddAuthenticatorClientServices(hostContext.Configuration);
                     services.AddScoped(sp =>
                     {
                         var httpClientFactory = sp.GetService<IHttpClientFactory>();
