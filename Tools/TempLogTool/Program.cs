@@ -31,6 +31,7 @@ namespace TempLogTool
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddMemoryCache();
                     services.AddXtiDataProtection();
                     services.AddAppDbContextForSqlServer(hostContext.Configuration);
                     services.AddScoped<AppFactory>();
@@ -43,7 +44,7 @@ namespace TempLogTool
                     services.AddScoped(sp =>
                     {
                         var httpClientFactory = sp.GetService<IHttpClientFactory>();
-                        var xtiToken = sp.GetService<XtiToken>();
+                        var xtiToken = sp.GetService<IXtiToken>();
                         var appOptions = sp.GetService<IOptions<AppOptions>>().Value;
                         var env = sp.GetService<IHostEnvironment>();
                         var versionKey = env.IsProduction() ? "" : AppVersionKey.Current.Value;
