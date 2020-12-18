@@ -82,5 +82,6 @@ function TempLog-Publish {
     $script:tempLogConfig | Xti-PublishServiceApp @PsBoundParameters
     if($EnvName -eq "Production") {
         Xti-EndPublish -BranchName $branch
+        $script:tempLogConfig | Xti-Merge
     }
 }
