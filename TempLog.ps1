@@ -33,7 +33,7 @@ function TempLog-New-XtiVersion {
     param(
         [Parameter(Position=0)]
         [ValidateSet("major", "minor", "patch")]
-        $VersionType = "minor",
+        $VersionType,
         [ValidateSet("Development", "Production", "Staging", "Test")]
         $EnvName = "Production"
     )
@@ -65,7 +65,7 @@ function TempLog-Xti-PostMerge {
 function TempLog-Publish {
     param(
         [ValidateSet("Production", “Development", "Staging", "Test")]
-        [string] $EnvName="Production"
+        [string] $EnvName="Development"
     )
     $ErrorActionPreference = "Stop"
 

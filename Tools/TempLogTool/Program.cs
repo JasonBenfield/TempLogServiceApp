@@ -59,15 +59,7 @@ namespace TempLogTool
                             .WithHostEnvironment(hostEnv);
                         return new DiskTempLogs(dataProtector, appDataFolder.Path(), "TempLogs");
                     });
-                    services.AddScoped(sp =>
-                    {
-                        var appKey = sp.GetService<AppKey>();
-                        var apiUser = sp.GetService<IAppApiUser>();
-                        var tempLogs = sp.GetService<TempLogs>();
-                        var permanentLogClient = sp.GetService<IPermanentLogClient>();
-                        var clock = sp.GetService<Clock>();
-                        return new TempLogApi(appKey, apiUser, tempLogs, permanentLogClient, clock);
-                    });
+                    services.AddScoped<TempLogApi>();
                     services.AddScoped<AppApi>(sp => sp.GetService<TempLogApi>());
                     services.AddHostedService<TempLogHostedService>();
                 })

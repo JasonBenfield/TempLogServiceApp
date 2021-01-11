@@ -21,6 +21,7 @@ namespace TempLogTool
         {
             using var scope = services.CreateScope();
             var api = scope.ServiceProvider.GetService<TempLogApi>();
+            await api.Log.Retry.Execute(new EmptyRequest());
             await api.Log.MoveToPermanent.Execute(new EmptyRequest());
             var lifetime = scope.ServiceProvider.GetService<IHostApplicationLifetime>();
             lifetime.StopApplication();
