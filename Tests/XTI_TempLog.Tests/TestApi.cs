@@ -13,12 +13,14 @@ namespace XTI_TempLog.Tests
             Value++;
         }
     }
-    public sealed class TestApi : AppApi
+    public static class TestAppKey
     {
         public static readonly AppKey AppKey = new AppKey("Test", AppType.Values.WebApp);
-
+    }
+    public sealed class TestApi : AppApi
+    {
         public TestApi(IAppApiUser user, Counter counter)
-            : base(AppKey, AppVersionKey.Current, user, ResourceAccess.AllowAuthenticated())
+            : base(TestAppKey.AppKey, user, ResourceAccess.AllowAuthenticated())
         {
             Test = AddGroup(u => new TestGroup(this, u, counter));
         }
