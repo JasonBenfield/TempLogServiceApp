@@ -31,8 +31,14 @@ namespace XTI_TempLog.Api
                 nameof(MoveToPermanent),
                 () => new MoveToPermanentAction(tempLogs, permanentLogClient, clock)
             );
+            Retry = actions.Add
+            (
+                nameof(Retry),
+                () => new RetryAction(tempLogs, clock)
+            );
         }
 
         public AppApiAction<EmptyRequest, EmptyActionResult> MoveToPermanent { get; }
+        public AppApiAction<EmptyRequest, EmptyActionResult> Retry { get; }
     }
 }

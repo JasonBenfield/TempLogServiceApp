@@ -49,7 +49,7 @@ namespace XTI_TempLog.Api
                 || logBatch.EndSessions.Any();
         }
 
-        private async Task<LogBatchModel> processBatch(IEnumerable<TempLog> logs, DateTime modifiedBefore)
+        private async Task<LogBatchModel> processBatch(IEnumerable<TempLog> logs, DateTimeOffset modifiedBefore)
         {
             var logBatch = new LogBatchModel();
             var startSessionFiles = startProcessingFiles(logs, l => l.StartSessionFiles(modifiedBefore));
