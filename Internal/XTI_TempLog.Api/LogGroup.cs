@@ -5,36 +5,31 @@ using XTI_TempLog.Abstractions;
 
 namespace XTI_TempLog.Api
 {
-    public sealed class LogGroup : AppApiGroup
+    public sealed class LogGroup : AppApiGroupWrapper
     {
         public LogGroup
         (
-            AppApi api,
-            IAppApiUser user,
-            TempLogs tempLogs,
-            IPermanentLogClient permanentLogClient,
-            Clock clock
+            AppApiGroup source,
+            LogActionFactory actionFactory
         )
-            : base
-            (
-                api,
-                new NameFromGroupClassName(nameof(LogGroup)).Value,
-                ModifierCategoryName.Default,
-                api.Access,
-                user,
-                (n, a, u) => new AppApiActionCollection(n, a, u)
-            )
+            : base(source)
         {
-            var actions = Actions<AppApiActionCollection>();
-            MoveToPermanent = actions.Add
+            var actions = new AppApiActionFactory(source);
+            MoveToPermanent = source.AddAction
             (
-                nameof(MoveToPermanent),
-                () => new MoveToPermanentAction(tempLogs, permanentLogClient, clock)
+                actions.Action
+                (
+                    nameof(MoveToPermanent),
+                    actionFactory.CreateMoveToPermanent
+                )
             );
-            Retry = actions.Add
+            Retry = source.AddAction
             (
-                nameof(Retry),
-                () => new RetryAction(tempLogs, clock)
+                actions.Action
+                (
+                    nameof(Retry),
+                    actionFactory.CreateRetry
+                )
             );
         }
 

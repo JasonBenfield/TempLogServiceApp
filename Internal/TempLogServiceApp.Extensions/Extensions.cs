@@ -24,6 +24,7 @@ namespace TempLogServiceApp.Extensions
             services.AddSingleton(_ => TempLogAppKey.AppKey);
             services.AddSingleton<IAppApiUser, AppApiSuperUser>();
             services.AddXtiServiceAppServices(configuration);
+            services.Configure<LogOptions>(configuration.GetSection(LogOptions.Log));
             services.AddScoped(sp =>
             {
                 var httpClientFactory = sp.GetService<IHttpClientFactory>();
@@ -42,8 +43,9 @@ namespace TempLogServiceApp.Extensions
                     .WithHostEnvironment(hostEnv);
                 return new DiskTempLogs(dataProtector, appDataFolder.Path(), "TempLogs");
             });
-            services.AddScoped<TempLogApi>();
-            services.AddScoped<AppApi>(sp => sp.GetService<TempLogApi>());
+            services.AddScoped<AppApiFactory, TempLogApiFactory>();
+            services.AddScoped(sp => sp.GetService<TempLogSetup>());
+            services.AddScoped(sp => (TempLogApi)sp.GetService<IAppApi>());
         }
     }
 }

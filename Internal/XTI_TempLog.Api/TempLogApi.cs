@@ -1,22 +1,30 @@
-﻿using XTI_App;
+﻿using System;
 using XTI_App.Api;
-using XTI_Core;
-using XTI_TempLog.Abstractions;
 
 namespace XTI_TempLog.Api
 {
-    public sealed class TempLogApi : AppApi
+    public sealed class TempLogApi : AppApiWrapper
     {
         public TempLogApi
         (
             IAppApiUser user,
-            TempLogs tempLogs,
-            IPermanentLogClient permanentLogClient,
-            Clock clock
+            IServiceProvider services
         )
-            : base(TempLogAppKey.AppKey, user, ResourceAccess.AllowAuthenticated())
+            : base
+            (
+                new AppApi
+                (
+                    TempLogAppKey.AppKey,
+                    user,
+                    ResourceAccess.AllowAuthenticated()
+                )
+            )
         {
-            Log = AddGroup(u => new LogGroup(this, u, tempLogs, permanentLogClient, clock));
+            Log = new LogGroup
+            (
+                source.AddGroup(nameof(Log)),
+                new LogActionFactory(services)
+            );
         }
 
         public LogGroup Log { get; }

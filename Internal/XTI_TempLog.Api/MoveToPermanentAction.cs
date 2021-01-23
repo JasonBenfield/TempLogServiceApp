@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -14,18 +15,26 @@ namespace XTI_TempLog.Api
         private readonly TempLogs tempLogs;
         private readonly IPermanentLogClient permanentLogClient;
         private readonly Clock clock;
+        private readonly LogOptions options;
         private readonly List<ITempLogFile> filesInProgress = new List<ITempLogFile>();
 
-        public MoveToPermanentAction(TempLogs tempLogs, IPermanentLogClient permanentLogClient, Clock clock)
+        public MoveToPermanentAction
+        (
+            TempLogs tempLogs,
+            IPermanentLogClient permanentLogClient,
+            Clock clock,
+            IOptions<LogOptions> options
+        )
         {
             this.tempLogs = tempLogs;
             this.permanentLogClient = permanentLogClient;
             this.clock = clock;
+            this.options = options.Value;
         }
 
         public async Task<EmptyActionResult> Execute(EmptyRequest model)
         {
-            var modifiedBefore = clock.Now().AddMinutes(-1);
+            var modifiedBefore = clock.Now().AddMinutes(-options.ProcessMinutesBefore);
             var logs = tempLogs.Logs();
             filesInProgress.Clear();
             var logBatch = await processBatch(logs, modifiedBefore);

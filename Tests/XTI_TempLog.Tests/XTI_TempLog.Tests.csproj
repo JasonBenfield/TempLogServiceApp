@@ -12,9 +12,9 @@
     <PackageReference Include="NUnit" Version="3.13.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-    <PackageReference Include="XTI_Core.Fakes" Version="1.8.9" />
-    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.5" />
-    <PackageReference Include="XTI_WebApp.Fakes" Version="1.7.0" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.8.11" />
+    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.6" />
+    <PackageReference Include="XTI_WebApp.Fakes" Version="1.7.1" />
   </ItemGroup>
 
   <ItemGroup>

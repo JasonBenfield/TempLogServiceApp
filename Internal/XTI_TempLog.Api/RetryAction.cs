@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using XTI_App.Api;
@@ -10,11 +11,13 @@ namespace XTI_TempLog.Api
     {
         private readonly TempLogs tempLogs;
         private readonly Clock clock;
+        private readonly LogOptions options;
 
-        public RetryAction(TempLogs tempLogs, Clock clock)
+        public RetryAction(TempLogs tempLogs, Clock clock, IOptions<LogOptions> options)
         {
             this.tempLogs = tempLogs;
             this.clock = clock;
+            this.options = options.Value;
         }
 
         public Task<bool> IsOptional()
@@ -38,7 +41,7 @@ namespace XTI_TempLog.Api
 
         private IEnumerable<ITempLogFile> getFilesInProgress()
         {
-            var modifiedBefore = clock.Now().AddMinutes(-1);
+            var modifiedBefore = clock.Now().AddMinutes(-options.ProcessMinutesBefore);
             var logs = tempLogs.Logs();
             return logs.SelectMany(l => l.ProcessingFiles(modifiedBefore)).ToArray();
         }
