@@ -17,35 +17,30 @@ namespace XTI_TempLog.Tests
     {
         public static readonly AppKey AppKey = new AppKey("Test", AppType.Values.WebApp);
     }
-    public sealed class TestApi : AppApi
+    public sealed class TestApi : AppApiWrapper
     {
         public TestApi(IAppApiUser user, Counter counter)
-            : base(TestAppKey.AppKey, user, ResourceAccess.AllowAuthenticated())
+            : base(new AppApi(TestAppKey.AppKey, user, ResourceAccess.AllowAuthenticated()))
         {
-            Test = AddGroup(u => new TestGroup(this, u, counter));
+            Test = new TestGroup(source.AddGroup(nameof(Test)), counter);
         }
 
         public TestGroup Test { get; }
     }
 
-    public sealed class TestGroup : AppApiGroup
+    public sealed class TestGroup : AppApiGroupWrapper
     {
-        public TestGroup(AppApi api, IAppApiUser user, Counter counter)
-            : base
-            (
-                api,
-                new NameFromGroupClassName(nameof(TestGroup)).Value,
-                ModifierCategoryName.Default,
-                api.Access,
-                user,
-                (n, a, u) => new AppApiActionCollection(n, a, u)
-            )
+        public TestGroup(AppApiGroup source, Counter counter)
+            : base(source)
         {
-            var actions = Actions<AppApiActionCollection>();
-            Run = actions.Add
+            var actions = new AppApiActionFactory(source);
+            Run = source.AddAction
             (
-                nameof(Run),
-                () => new RunAction(counter)
+                actions.Action
+                (
+                    nameof(Run),
+                    () => new RunAction(counter)
+                )
             );
         }
 

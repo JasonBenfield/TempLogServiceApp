@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SessionLogWebApp.Client" Version="1.1.5-dev201227103700071" />
-    <PackageReference Include="XTI_ServiceApp.Extensions" Version="1.1.4" />
+    <PackageReference Include="SessionLogWebApp.Client" Version="1.1.6-dev210123082910771" />
+    <PackageReference Include="XTI_ServiceApp.Extensions" Version="1.1.6" />
   </ItemGroup>
 
   <ItemGroup>

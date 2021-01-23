@@ -5,7 +5,7 @@ $script:tempLogConfig = [PSCustomObject]@{
     RepoName = "TempLogServiceApp"
     AppName = "TempLog"
     AppType = "Service"
-    ProjectDir = "C:\XTI\src\TempLogServiceApp\Apps\TempLogServiceApp"
+    ProjectDir = "Apps\TempLogServiceApp"
 }
 
 function TempLog-New-XtiIssue {
@@ -69,19 +69,40 @@ function TempLog-Publish {
     )
     $ErrorActionPreference = "Stop"
 
-    $activity = "Publishing to $EnvName"
+    Write-Output "Publishing to $EnvName"
     
-    Write-Progress -Activity $activity -Status "Building solution" -PercentComplete 50
+    Write-Output "Building solution"
     dotnet build 
     
-    Write-Progress -Activity $activity -Status "Publishing service app" -PercentComplete 80
+    Write-Output "Setting Up Temp Log"
+    TempLog-Setup -EnvName $EnvName
+    
     if($EnvName -eq "Production") {
         $branch = Get-CurrentBranchname
+        Write-Output "Begin Publish"
         Xti-BeginPublish -BranchName $branch
     }
+    Write-Output  "Publishing Temp Log"
     $script:tempLogConfig | Xti-PublishServiceApp @PsBoundParameters
     if($EnvName -eq "Production") {
+        Write-Output "End Publish"
         Xti-EndPublish -BranchName $branch
+        Write-Output "Merging Pull Request"
         $script:tempLogConfig | Xti-Merge
+    }
+}
+
+function TempLog-Setup {
+    param(
+        [ValidateSet("Production", "Development", "Staging", "Test")]
+        [string] $EnvName="Development"
+    )
+    dotnet build Apps/TempLogSetupApp
+    if( $LASTEXITCODE -ne 0 ) {
+        Throw "Temp Log setup failed with exit code $LASTEXITCODE"
+    }
+    dotnet run --project Apps/TempLogSetupApp --environment=$EnvName
+    if( $LASTEXITCODE -ne 0 ) {
+        Throw "Temp Log setup failed with exit code $LASTEXITCODE"
     }
 }

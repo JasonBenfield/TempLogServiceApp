@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="XTI_App.Api" Version="1.7.0" />
-    <PackageReference Include="XTI_TempLog" Version="1.2.5" />
+    <PackageReference Include="XTI_App.Api" Version="1.7.1" />
+    <PackageReference Include="XTI_TempLog" Version="1.2.6" />
   </ItemGroup>
 
 </Project>
