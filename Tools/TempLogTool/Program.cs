@@ -8,16 +8,15 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using XTI_App;
 using XTI_App.Api;
+using XTI_AuthenticatorClient.Extensions;
 using XTI_Configuration.Extensions;
 using XTI_Core;
+using XTI_Secrets.Extensions;
 using XTI_TempLog;
 using XTI_TempLog.Abstractions;
 using XTI_TempLog.Api;
 using XTI_TempLog.Extensions;
 using XTI_WebAppClient;
-using XTI_Secrets.Extensions;
-using XTI_AuthenticatorClient.Extensions;
-using Microsoft.Extensions.Configuration;
 
 namespace TempLogTool
 {
